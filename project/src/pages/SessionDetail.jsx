@@ -33,8 +33,8 @@ export default function SessionDetail() {
   const [showQRModal, setShowQRModal] = useState(false);
 
   const qrContainerRef = useRef(null);
-  const studentFormUrl = `${window.location.origin}/presence/${id}`;
 
+  const studentFormUrl = `${window.location.origin}/attend/${id}`;
   useEffect(() => {
     fetchSessionData();
   }, [id]);
