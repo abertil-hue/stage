@@ -122,6 +122,9 @@ export default function Dashboard() {
               alt="Algérie Télécom Logo" 
               className="h-20 w-auto object-contain shrink-0"
             />
+            <div className="bg-red-600 text-white text-2xl font-bold p-6 text-center">
+      TEST: IF YOU SEE THIS, THE FILE IS UPDATING!
+    </div>
             <div className="space-y-1">
               <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900">
                 {t("Formation & Workshop Management")}
