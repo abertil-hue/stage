@@ -1,0 +1,513 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { supabase } from '../config/supabaseClient';
+import logo from '../logo/logo.svg';
+import { 
+  ArrowLeft, 
+  Calendar, 
+  MapPin, 
+  User, 
+  Users, 
+  Copy, 
+  Check, 
+  Search, 
+  Download, 
+  Loader2,
+  QrCode,
+  X,
+  FileText
+} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+export default function SessionDetail() {
+  const { t } = useTranslation();
+  const { id } = useParams();
+  const [workshop, setWorkshop] = useState(null);
+  const [attendees, setAttendees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showQRModal, setShowQRModal] = useState(false);
+
+  const qrContainerRef = useRef(null);
+  const studentFormUrl = `${window.location.origin}/presence/${id}`;
+
+  useEffect(() => {
+    fetchSessionData();
+  }, [id]);
+
+  const fetchSessionData = async () => {
+    setLoading(true);
+
+    const { data: formationData } = await supabase
+      .from('formations')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    const { data: presencesData } = await supabase
+      .from('presences')
+      .select('*')
+      .eq('formation_id', id)
+      .order('id', { ascending: false });
+
+    setWorkshop(formationData);
+    setAttendees(presencesData || []);
+    setLoading(false);
+  };
+
+  // Helper to convert imported SVG file path to base64 Data URL for jsPDF
+  const getLogoBase64 = () => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = logo;
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width || 120;
+        canvas.height = img.height || 40;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => resolve(null);
+    });
+  };
+
+  // Copy Link Action
+  const copyDirectLink = () => {
+    navigator.clipboard.writeText(studentFormUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Download QR Code Image Action
+  const downloadQRCode = () => {
+    const svgElement = qrContainerRef.current?.querySelector('svg');
+    if (!svgElement) return;
+
+    const svgData = new XMLSerializer().serializeToString(svgElement);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const URLObject = window.URL || window.webkitURL || window;
+    const blobURL = URLObject.createObjectURL(svgBlob);
+
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 500;
+      canvas.height = 500;
+      const context = canvas.getContext('2d');
+      
+      context.fillStyle = '#FFFFFF';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(image, 0, 0, 500, 500);
+
+      const png = canvas.toDataURL('image/png');
+      const downloadLink = document.createElement('a');
+      downloadLink.href = png;
+      downloadLink.download = `workshop_${id}_qrcode.png`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      URLObject.revokeObjectURL(blobURL);
+    };
+
+    image.src = blobURL;
+  };
+
+  // Official Attendance Register PDF Export
+  const exportPDF = async () => {
+    const doc = new jsPDF();
+    const primaryColor = [0, 45, 98];
+    const emeraldColor = [0, 168, 89];
+
+    doc.setFillColor(...primaryColor);
+    doc.rect(0, 0, 150, 4, 'F');
+    doc.setFillColor(...emeraldColor);
+    doc.rect(150, 0, 60, 4, 'F');
+
+    const logoBase64 = await getLogoBase64();
+    if (logoBase64) {
+      doc.addImage(logoBase64, 'PNG', 14, 10, 30, 12);
+    }
+
+    const titleX = logoBase64 ? 50 : 14;
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(...primaryColor);
+    doc.text('OFFICIAL ATTENDANCE REGISTER', titleX, 17);
+
+    doc.setFontSize(8.5);
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text('ALGÉRIENNE DES TÉLÉCOMMUNICATIONS • FORMATION PORTAL', titleX, 23);
+
+    doc.setDrawColor(226, 232, 240);
+    doc.line(14, 28, 196, 28);
+
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...primaryColor);
+    doc.text('WORKSHOP DETAILS', 14, 36);
+
+    doc.setFontSize(9.5);
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(51, 65, 85);
+
+    doc.text(`• Formation Name: ${workshop?.title || 'N/A'}`, 14, 44);
+    doc.text(`• Creator / Trainer: ${workshop?.trainer_name || 'Unassigned'}`, 14, 50);
+    
+    const formattedDate = workshop?.date 
+      ? new Date(workshop.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+      : 'N/A';
+    doc.text(`• Date & Duration: ${formattedDate}${workshop?.time ? ` at : ${workshop.time}` : ''}`, 14, 56);
+    doc.text(`• Location / Room: ${workshop?.location || 'N/A'}`, 14, 62);
+
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...primaryColor);
+    doc.text('PARTICIPANT LIST', 14, 74);
+
+    const tableRows = attendees.map((student, index) => [
+      index + 1,
+      student.full_name || 'N/A',
+      student.email || 'N/A',
+      student.phone || 'N/A',
+      student.status || 'Participant'
+    ]);
+
+    autoTable(doc, {
+      startY: 78,
+      head: [['#', 'Participant Name', 'Email', 'Phone', 'Role / Status']],
+      body: tableRows,
+      headStyles: {
+        fillColor: primaryColor,
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 9
+      },
+      bodyStyles: {
+        fontSize: 8.5,
+        textColor: [51, 65, 85]
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252]
+      },
+      margin: { left: 14, right: 14 }
+    });
+
+    let finalY = (doc.lastAutoTable?.finalY || 120) + 8;
+
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(...emeraldColor);
+    doc.text(`Total Attendees: ${attendees.length}`, 14, finalY);
+
+    finalY += 12;
+
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...primaryColor);
+    doc.text('TRAINER REMARKS & OBSERVATIONS', 14, finalY);
+
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineDashPattern([2, 2], 0);
+    
+    finalY += 10;
+    doc.line(14, finalY, 196, finalY);
+    finalY += 10;
+    doc.line(14, finalY, 196, finalY);
+    finalY += 10;
+    doc.line(14, finalY, 196, finalY);
+
+    doc.setLineDashPattern([], 0);
+
+    finalY += 14;
+
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...primaryColor);
+    doc.text('SIGNATURES & STAMPS', 14, finalY);
+
+    finalY += 8;
+
+    doc.setDrawColor(203, 213, 225);
+    doc.rect(14, finalY, 85, 28);
+    doc.setFontSize(8.5);
+    doc.setFont('Helvetica', 'bold');
+    doc.setTextColor(100, 116, 139);
+    doc.text('Trainer Signature', 18, finalY + 6);
+
+    doc.rect(111, finalY, 85, 28);
+    doc.text('Director Signature & Stamp', 115, finalY + 6);
+
+    doc.save(`${workshop?.title || 'workshop'}_Official_Attendance_Register.pdf`);
+  };
+
+  const filteredAttendees = attendees.filter((a) => {
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return true;
+    return (
+      a.full_name?.toLowerCase().includes(term) ||
+      a.email?.toLowerCase().includes(term) ||
+      a.phone?.toLowerCase().includes(term) ||
+      a.status?.toLowerCase().includes(term) ||
+      a.reason?.toLowerCase().includes(term)
+    );
+  });
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-8">
+        
+        {/* Back to Dashboard */}
+        <div>
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-2 text-xs font-bold text-slate-700 hover:text-emerald-600 transition-all bg-white px-4 py-2.5 rounded-xl border border-slate-200/80 shadow-2xs hover:shadow-md"
+          >
+            <ArrowLeft size={15} /> {t("Back to Dashboard")}
+          </Link>
+        </div>
+
+        {/* Centered Session Detail Header Card */}
+        <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-200/80 shadow-xs flex flex-col items-center text-center space-y-5 relative overflow-hidden">
+          {/* Logo */}
+          <div className="mb-6">
+            <img src={logo} alt="Logo" className="h-30 w-auto object-contain" />
+          </div>
+
+          {/* Workshop Name */}
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 capitalize tracking-tight max-w-2xl">
+            {workshop?.title || t('Loading Session...')}
+          </h1>
+
+          {/* Trainer Name */}
+          <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
+            <User size={16} className="text-emerald-600 shrink-0" />
+            <span>{t("Trainer")}: <strong className="text-slate-900">{workshop?.trainer_name || t('Unassigned')}</strong></span>
+          </div>
+
+          {/* Date and Time */}
+          <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-slate-600">
+            <Calendar size={16} className="text-emerald-600 shrink-0" />
+            <span>
+              {workshop?.date 
+                ? new Date(workshop.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) 
+                : t('Date TBD')}
+              {workshop?.time ? ` at : ${workshop.time}` : ''}
+            </span>
+          </div>
+
+          {/* Place */}
+          <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-slate-600">
+            <MapPin size={16} className="text-emerald-600 shrink-0" />
+            <span>{workshop?.location || t('Location TBD')}</span>
+          </div>
+
+          {/* Action Buttons Toolbar */}
+          <div className="flex flex-wrap items-center justify-center gap-2.5 pt-4 border-t border-slate-100 w-full max-w-lg">
+            <button
+              onClick={copyDirectLink}
+              className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-xl text-xs transition-all border border-slate-200"
+              title={t("Copy Link")}
+            >
+              {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+              <span>{copied ? t('Copied Link') : t('Copy Link')}</span>
+            </button>
+
+            <button
+              onClick={() => setShowQRModal(true)}
+              className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-sm"
+              title={t("Show QR")}
+            >
+              <QrCode size={14} />
+              <span>{t("Show QR")}</span>
+            </button>
+
+            <button
+              onClick={downloadQRCode}
+              className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold px-4 py-2 rounded-xl text-xs transition-all"
+              title={t("Save QR")}
+            >
+              <Download size={14} />
+              <span>{t("Save QR")}</span>
+            </button>
+
+            <button
+              onClick={exportPDF}
+              className="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-sm"
+              title={t("Export PDF")}
+            >
+              <FileText size={14} />
+              <span>{t("Export PDF")}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Hidden Container for QR Code Export Rendering */}
+        <div className="hidden" ref={qrContainerRef}>
+          <QRCodeSVG value={studentFormUrl} size={500} level="H" includeMargin={true} />
+        </div>
+
+        {/* List of Participants :: Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+              <span>{t("list of participants ::")}</span>
+            </h2>
+            <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200/60">
+              <Users size={14} />
+              {attendees.length}
+            </span>
+          </div>
+
+          {/* Table & Controls Container */}
+          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            
+            {/* Search Input Bar */}
+            <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+              <div className="relative w-full sm:w-80">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder={t("Search registered attendees...")}
+                  className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all shadow-2xs"
+                />
+              </div>
+            </div>
+
+            {/* Table Content */}
+            {loading ? (
+              <div className="text-center py-16 bg-white">
+                <Loader2 size={26} className="animate-spin text-emerald-500 mx-auto mb-2" />
+                <p className="text-xs text-slate-500 font-medium">{t("Loading participant register...")}</p>
+              </div>
+            ) : filteredAttendees.length === 0 ? (
+              <div className="text-center py-14 px-4 bg-white flex flex-col items-center justify-center">
+                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-3">
+                  <Users size={22} />
+                </div>
+                <p className="text-xs font-bold text-slate-800">{t("No registered attendees found")}</p>
+                <p className="text-xs text-slate-400 mt-1 max-w-sm">
+                  {searchTerm ? `${t('No results match')} "${searchTerm}".` : t('Share the QR code or direct link with participants to collect signatures.')}
+                </p>
+              </div>
+            ) : (
+              <div className="w-full overflow-hidden">
+                <table className="w-full table-fixed text-left text-xs">
+                  <thead className="bg-slate-50/80 text-slate-500 uppercase font-bold border-b border-slate-100 tracking-wider">
+                    <tr>
+                      <th className="p-4 pl-6 w-[18%]">{t("Full Name")}</th>
+                      <th className="p-4 w-[25%]">{t("Email Address")}</th>
+                      <th className="p-4 w-[17%]">{t("Phone")}</th>
+                      <th className="p-4 w-[15%]">{t("Status / Role")}</th>
+                      <th className="p-4 pr-6 w-[25%]">{t("Reason")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium">
+                    {filteredAttendees.map((student) => (
+                      <tr key={student.id} className="hover:bg-slate-50/80 transition-colors group">
+                        
+                        {/* Full Name */}
+                        <td className="p-4 pl-6 font-bold text-slate-900 group-hover:text-emerald-700 transition-colors break-words whitespace-normal leading-relaxed">
+                          {student.full_name || '—'}
+                        </td>
+
+                        {/* Email Address */}
+                        <td className="p-4 text-slate-600 break-all whitespace-normal leading-relaxed">
+                          {student.email || '—'}
+                        </td>
+
+                        {/* Phone */}
+                        <td className="p-4 text-slate-600 break-all whitespace-normal leading-relaxed">
+                          {student.phone || '—'}
+                        </td>
+
+                        {/* Status / Role */}
+                        <td className="p-4 break-words whitespace-normal">
+                          <span className="inline-flex items-center px-2.5 py-1 bg-blue-50 text-blue-900 font-bold rounded-lg border border-blue-200/60 text-[11px] break-words">
+                            {student.status || t('Participant')}
+                          </span>
+                        </td>
+
+                        {/* Reason */}
+                        <td className="p-4 pr-6 text-slate-600 break-words whitespace-normal leading-relaxed">
+                          {student.reason || '—'}
+                        </td>
+
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* QR Code Overlay Modal */}
+      {showQRModal && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden text-center relative border border-slate-200/80">
+            
+            <div className="bg-slate-900 p-5 text-white flex items-center justify-between border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <QrCode size={18} className="text-emerald-400" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">{t("Attendance QR Code")}</h3>
+              </div>
+              <button
+                onClick={() => setShowQRModal(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 flex flex-col items-center">
+              <div className="p-4 bg-white rounded-2xl border-2 border-slate-100 shadow-md">
+                <QRCodeSVG value={studentFormUrl} size={210} level="H" includeMargin={true} />
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-slate-900 max-w-xs line-clamp-1">
+                  {workshop?.title}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {t("Scan with mobile camera to submit presence.")}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 w-full pt-2">
+                <button
+                  onClick={copyDirectLink}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2.5 px-3 rounded-xl text-xs transition-all border border-slate-200 flex items-center justify-center gap-1.5"
+                >
+                  {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                  <span>{copied ? t('Copied') : t('Copy Link')}</span>
+                </button>
+
+                <button
+                  onClick={downloadQRCode}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-3 rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-1.5"
+                >
+                  <Download size={14} />
+                  <span>{t("Save Image")}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 border-t border-slate-100">
+              <p className="text-[10px] text-slate-400 font-medium">{t("Algérie Télécom • Presence Portal")}</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

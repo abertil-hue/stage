@@ -1,0 +1,274 @@
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { supabase } from '../config/supabaseClient';
+import logo from '../logo/logo.svg';
+import LanguageSelector from './LanguageSelector';
+import { 
+  User, 
+  Mail, 
+  Phone, 
+  Briefcase, 
+  FileText, 
+  CheckCircle2, 
+  Sparkles, 
+  AlertCircle,
+  Loader2,
+  Calendar
+} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+export default function Attend() {
+  const { t } = useTranslation();
+  const { id } = useParams();
+  const [workshop, setWorkshop] = useState(null);
+  const [loadingWorkshop, setLoadingWorkshop] = useState(true);
+
+  // Form Fields
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [status, setStatus] = useState('');
+  const [reason, setReason] = useState('');
+
+  // UI States
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    if (id) {
+      fetchWorkshopDetails();
+    }
+  }, [id]);
+
+  const fetchWorkshopDetails = async () => {
+    setLoadingWorkshop(true);
+    const { data } = await supabase
+      .from('formations')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (data) {
+      setWorkshop(data);
+    }
+    setLoadingWorkshop(false);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setErrorMsg('');
+
+    const { error } = await supabase.from('presences').insert([
+      {
+        formation_id: id,
+        full_name: fullName,
+        email: email,
+        phone: phone,
+        status: status,
+        reason: reason,
+      },
+    ]);
+
+    if (error) {
+      setErrorMsg(error.message);
+    } else {
+      setSubmitted(true);
+    }
+
+    setSubmitting(false);
+  };
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4 relative">
+        <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-20">
+          <LanguageSelector />
+        </div>
+        <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-xl border border-slate-200/80 space-y-4">
+          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+            <CheckCircle2 size={36} />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900">{t("Attendance Recorded!")}</h2>
+          <p className="text-xs text-slate-600 leading-relaxed">
+            {t("Your registration for")} <strong className="text-slate-900">{workshop?.title || t('the workshop')}</strong> {t("has been submitted successfully.")}
+          </p>
+          <div className="pt-4 border-t border-slate-100">
+            <p className="text-[11px] text-slate-400">{t("Algérie Télécom • Training Portal")}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12 flex flex-col justify-center items-center p-4 relative">
+      {/* Floating Top Right Language Selector */}
+      <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-20">
+        <LanguageSelector />
+      </div>
+
+      <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200/80">
+        {/* Header Section */}
+        <div className="p-6 text-center space-y-3">
+          <div className="flex justify-center mb-5">
+            <img 
+              src={logo} 
+              alt="Algérie Télécom" 
+              className="h-24 w-auto object-contain"
+            />
+          </div>
+          
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-xs font-bold">
+            <Sparkles size={12} /> {t("Welcome to this Workshop")}
+          </div>
+
+          {loadingWorkshop ? (
+            <div className="flex justify-center items-center gap-2 text-xs text-slate-500 py-2">
+              <Loader2 size={16} className="animate-spin text-emerald-500" />
+              <span>{t("Loading workshop details...")}</span>
+            </div>
+          ) : (
+            <div className="space-y-1.5 pt-1">
+              <h1 className="text-xl font-extrabold text-slate-900 capitalize tracking-tight">
+                {workshop?.title || t('Workshop Sign-In')}
+              </h1>
+              
+              <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs font-semibold text-slate-600 pt-1">
+                {workshop?.trainer_name && (
+                  <span className="flex items-center gap-1 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 text-slate-700">
+                    <User size={13} className="text-emerald-600 shrink-0" />
+                    <span>{workshop.trainer_name}</span>
+                  </span>
+                )}
+                {workshop?.date && (
+                  <span className="flex items-center gap-1 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 text-slate-700">
+                    <Calendar size={13} className="text-emerald-600 shrink-0" />
+                    <span>
+                      {new Date(workshop.date).toLocaleDateString()}
+                      {workshop?.time ? ` at : ${workshop.time}` : ''}
+                    </span>
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {errorMsg && (
+            <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2.5">
+              <AlertCircle size={16} className="flex-shrink-0 text-red-600" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              {t("Full Name *")}
+            </label>
+            <div className="relative">
+              <User size={16} className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder={t("Enter your full name")}
+                className="w-full pl-10 rtl:pl-3.5 rtl:pr-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              {t("Email Address *")}
+            </label>
+            <div className="relative">
+              <Mail size={16} className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t("e.g. participant@example.com")}
+                className="w-full pl-10 rtl:pl-3.5 rtl:pr-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              {t("Phone Number")}
+            </label>
+            <div className="relative">
+              <Phone size={16} className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="0600 00 00 00"
+                className="w-full pl-10 rtl:pl-3.5 rtl:pr-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              {t("Status / Function")}
+            </label>
+            <div className="relative">
+              <Briefcase size={16} className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                placeholder={t("e.g. Employee / Student")}
+                className="w-full pl-10 rtl:pl-3.5 rtl:pr-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              {t("Reason / Motivation")}
+            </label>
+            <div className="relative">
+              <FileText size={16} className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-3 text-slate-400" />
+              <textarea
+                rows={3}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder={t("Brief description...")}
+                className="w-full pl-10 rtl:pl-3.5 rtl:pr-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full mt-2 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all shadow-md shadow-emerald-900/10 flex items-center justify-center gap-2"
+          >
+            {submitting ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>{t("CONFIRMING...")}</span>
+              </>
+            ) : (
+              <span>{t("CONFIRM ATTENDANCE")}</span>
+            )}
+          </button>
+
+          <div className="text-center pt-2">
+            <p className="text-[11px] text-slate-400">
+              {t("Protected by Enterprise Security Policy • Algérie Télécom ©")}
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
