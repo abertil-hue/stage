@@ -1,31 +1,51 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { supabase } from './config/supabaseClient';
 
-// Exact imports from your src/pages folder
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import SessionDetail from './pages/SessionDetail';
 import Attend from './pages/Attend';
 
 export default function App() {
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // 1. Get initial login session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    // 2. Listen for auth changes (login/logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) return null; // Prevents flashing during auth check
+
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        {/* PUBLIC ROUTES (No login required - Open for students) */}
-        <Route path="/login" element={<Login />} />
-        
-        {/* Student attendance form - maps both /presence/:id and /attend/:id */}
-        <Route path="/presence/:id" element={<Attend />} />
+        {/* Public Attendance Form */}
         <Route path="/attend/:id" element={<Attend />} />
 
-        {/* ADMIN / TRAINER PORTAL ROUTES */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/session/:id" element={<SessionDetail />} />
+        {/* Login Page */}
+        <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <Login />} />
 
-        {/* Default redirects */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        {/* PROTECTED DASHBOARD: Only loads if session exists */}
+        <Route 
+          path="/dashboard" 
+          element={session ? <Dashboard /> : <Navigate to="/login" replace />} 
+        />
+
+        {/* Default fallback: redirects home to /login or /dashboard */}
+        <Route path="*" element={<Navigate to={session ? "/dashboard" : "/login"} replace />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 }
