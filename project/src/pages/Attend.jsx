@@ -152,14 +152,17 @@ export default function Attend() {
                   </span>
                 )}
                 {workshop?.date && (
-                  <span className="flex items-center gap-1 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 text-slate-700">
-                    <Calendar size={13} className="text-emerald-600 shrink-0" />
-                    <span>
-                      {new Date(workshop.date).toLocaleDateString()}
-                      {workshop?.time ? ` at : ${workshop.time}` : ''}
-                    </span>
-                  </span>
-                )}
+  <span className="flex items-center gap-1 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 text-slate-700">
+    <Calendar size={13} className="text-emerald-600 shrink-0" />
+    <span>
+      {/* 1. Format date according to current selected language */}
+      {new Date(workshop.date).toLocaleDateString(i18n.language)}
+      
+      {/* 2. Translate 'at' dynamically instead of hardcoding English 'at :' */}
+      {workshop?.time ? ` ${t("at")} ${workshop.time}` : ''}
+    </span>
+  </span>
+)}
               </div>
             </div>
           )}
