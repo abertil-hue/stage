@@ -1,18 +1,24 @@
-import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabaseClient';
 import logo from '../logo/logo.svg';
 import LanguageSelector from './LanguageSelector';
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect } from 'react';
 
 export default function Login() {
-  const { t } = useTranslation();
+  // 1. Get both `t` and `i18n` at the top level
+  const { t, i18n } = useTranslation(); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
+
+  // 2. Place useEffect at the top level (outside handleLogin)
+  useEffect(() => {
+    document.title = `${t("Login")} | Algérie Télécom`;
+  }, [i18n.language, t]);
 
   const handleLogin = async (e) => {
     e.preventDefault();

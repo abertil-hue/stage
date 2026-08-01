@@ -56,6 +56,9 @@ export default function Dashboard() {
   useEffect(() => {
     fetchFormations();
   }, []);
+  useEffect(() => {
+    document.title = `${t("Dashboard")} | Algérie Télécom`;
+  }, [i18n.language, t]);
 
   const fetchFormations = async () => {
     setLoading(true);

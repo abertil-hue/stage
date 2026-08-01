@@ -53,6 +53,13 @@ export default function SessionDetail() {
   useEffect(() => {
     fetchSessionData();
   }, [id]);
+  useEffect(() => {
+    if (workshop?.title) {
+      document.title = `${workshop.title} | Algérie Télécom`;
+    } else {
+      document.title = `${t("Session Detail")} | Algérie Télécom`;
+    }
+  }, [workshop, i18n.language, t]);
 
   const fetchSessionData = async () => {
     setLoading(true);

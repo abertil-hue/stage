@@ -40,6 +40,13 @@ export default function Attend() {
       fetchWorkshopDetails();
     }
   }, [id]);
+  useEffect(() => {
+    if (formation?.title) {
+      document.title = `${formation.title} - ${t("Attendance Register")} | Algérie Télécom`;
+    } else {
+      document.title = `${t("Attendance Register")} | Algérie Télécom`;
+    }
+  }, [formation, i18n.language, t]);
 
   const fetchWorkshopDetails = async () => {
     setLoadingWorkshop(true);
