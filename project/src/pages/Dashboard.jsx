@@ -18,13 +18,17 @@ import {
   Trash2,
   AlertTriangle,
   Clock,
-  CheckCircle2,
-  Filter
+  CheckCircle2
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+const ALGERIAN_ARABIC_MONTHS = [
+  'جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان',
+  'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+];
+
 export default function Dashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [formations, setFormations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
@@ -223,7 +227,17 @@ export default function Dashboard() {
     if (!dateString) return t('Date TBD');
     const parsed = new Date(dateString);
     if (isNaN(parsed.getTime())) return t('Date TBD');
-    return parsed.toLocaleDateString('en-US', {
+
+    const lang = i18n.language || 'fr';
+
+    if (lang.startsWith('ar')) {
+      const dayNum = parsed.getDate();
+      const monthName = ALGERIAN_ARABIC_MONTHS[parsed.getMonth()];
+      const yearNum = parsed.getFullYear();
+      return `${dayNum} ${monthName} ${yearNum}`;
+    }
+
+    return parsed.toLocaleDateString(lang, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -399,7 +413,7 @@ export default function Dashboard() {
               )}
             </div>
 
-            {/* Clear Filters Button (If any filter is set) */}
+            {/* Clear Filters Button */}
             {isAnyFilterActive && (
               <button
                 onClick={clearAllFilters}

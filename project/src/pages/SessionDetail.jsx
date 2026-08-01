@@ -26,8 +26,13 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+const ALGERIAN_ARABIC_MONTHS = [
+  'جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان',
+  'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+];
+
 export default function SessionDetail() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [workshop, setWorkshop] = useState(null);
@@ -67,6 +72,36 @@ export default function SessionDetail() {
     setWorkshop(formationData);
     setAttendees(presencesData || []);
     setLoading(false);
+  };
+
+  const formatSessionDate = (dateStr, timeStr) => {
+    if (!dateStr) return t('Date TBD');
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return t('Date TBD');
+
+    const lang = i18n.language || 'fr';
+
+    if (lang.startsWith('ar')) {
+      const dayName = d.toLocaleDateString('ar-DZ', { weekday: 'long' });
+      const dayNum = d.getDate();
+      const monthName = ALGERIAN_ARABIC_MONTHS[d.getMonth()];
+      const yearNum = d.getFullYear();
+
+      let formattedDate = `${dayName}، ${dayNum} ${monthName} ${yearNum}`;
+      if (timeStr) {
+        formattedDate += ` ${t('at')} ${timeStr}`;
+      }
+      return formattedDate;
+    }
+
+    const formattedDate = d.toLocaleDateString(lang, {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
+
+    return timeStr ? `${formattedDate} ${t('at')} ${timeStr}` : formattedDate;
   };
 
   // Status calculator with +2 Hours workshop duration buffer
@@ -245,9 +280,19 @@ export default function SessionDetail() {
     doc.text(`• ${t("Formation Name")}: ${workshop?.title || 'N/A'}`, 14, 44);
     doc.text(`• ${t("Trainer")}: ${workshop?.trainer_name || t('Unassigned')}`, 14, 50);
     
-    const formattedDate = workshop?.date 
-      ? new Date(workshop.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-      : 'N/A';
+    const lang = i18n.language || 'fr';
+    let formattedDate = 'N/A';
+    if (workshop?.date) {
+      const d = new Date(workshop.date);
+      if (!isNaN(d.getTime())) {
+        if (lang.startsWith('ar')) {
+          formattedDate = `${d.getDate()} ${ALGERIAN_ARABIC_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+        } else {
+          formattedDate = d.toLocaleDateString(lang, { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+      }
+    }
+
     doc.text(`• ${t("Date")}: ${formattedDate}${workshop?.time ? ` ${t("at")} ${workshop.time}` : ''}`, 14, 56);
     doc.text(`• ${t("Location")}: ${workshop?.location || 'N/A'}`, 14, 62);
 
@@ -387,12 +432,7 @@ export default function SessionDetail() {
 
           <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-slate-600">
             <Calendar size={16} className="text-emerald-600 shrink-0" />
-            <span>
-              {workshop?.date 
-                ? new Date(workshop.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) 
-                : t('Date TBD')}
-              {workshop?.time ? ` ${t('at')} ${workshop.time}` : ''}
-            </span>
+            <span>{formatSessionDate(workshop?.date, workshop?.time)}</span>
           </div>
 
           <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-slate-600">
