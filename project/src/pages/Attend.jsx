@@ -18,7 +18,7 @@ import {
 import { useTranslation } from 'react-i18next';
 
 export default function Attend() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation(); // Destructured i18n here
   const { id } = useParams();
   const [workshop, setWorkshop] = useState(null);
   const [loadingWorkshop, setLoadingWorkshop] = useState(true);
@@ -40,13 +40,15 @@ export default function Attend() {
       fetchWorkshopDetails();
     }
   }, [id]);
+
+  // Dynamic Browser Tab Title Hook
   useEffect(() => {
-    if (formation?.title) {
-      document.title = `${formation.title} - ${t("Attendance Register")} | Algérie Télécom`;
+    if (workshop?.title) {
+      document.title = `${workshop.title} - ${t("Attendance Register")} | Algérie Télécom`;
     } else {
       document.title = `${t("Attendance Register")} | Algérie Télécom`;
     }
-  }, [formation, i18n.language, t]);
+  }, [workshop, i18n.language, t]);
 
   const fetchWorkshopDetails = async () => {
     setLoadingWorkshop(true);
