@@ -101,7 +101,7 @@ export default function Dashboard() {
   const formatDateDisplay = (dateString) => {
     if (!dateString) return t('Date TBD');
     const parsed = new Date(dateString);
-    if (isNaN(parsed.getTime())) return dateString; // fallback to raw string if unparseable
+    if (isNaN(parsed.getTime())) return dateString;
     return parsed.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -128,7 +128,7 @@ export default function Dashboard() {
         
         {/* HERO BANNER */}
         <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs flex flex-col lg:flex-row items-center justify-between gap-6">
-          <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
+          <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left rtl:sm:text-right">
             <img 
               src={logo} 
               alt="Algérie Télécom Logo" 
@@ -136,10 +136,10 @@ export default function Dashboard() {
             />
             <div className="space-y-1">
               <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900">
-                {t("Gestion des formations et ateliers")}
+                {t("Formation & Workshop Management")}
               </h1>
               <p className="text-slate-500 text-xs sm:text-sm leading-relaxed max-w-xl">
-                {t("Gérez toutes les sessions de formation officielles, surveillez les registres de présence et exportez les données.")}
+                {t("Manage all official corporate training sessions, monitor student sign-in registers, and export session data.")}
               </p>
             </div>
           </div>
@@ -148,7 +148,7 @@ export default function Dashboard() {
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3 shrink-0 w-full sm:w-auto border-t sm:border-t-0 pt-4 sm:pt-0 border-slate-100">
             <div className="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700">
               <Globe size={16} className="text-emerald-600" />
-              <span>{t("Ateliers actifs")}: <strong className="text-slate-900 font-bold">{formations.length}</strong></span>
+              <span>{t("Active Workshops")}: <strong className="text-slate-900 font-bold">{formations.length}</strong></span>
             </div>
 
             <button
@@ -156,7 +156,7 @@ export default function Dashboard() {
               className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold px-4 py-2.5 rounded-xl text-xs transition-all shadow-xs hover:shadow-md cursor-pointer"
             >
               <Plus size={16} />
-              <span>{t("Ajouter une formation")}</span>
+              <span>{t("Add New Formation")}</span>
             </button>
           </div>
         </div>
@@ -164,18 +164,18 @@ export default function Dashboard() {
         {/* Search Bar */}
         <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center gap-3">
           <div className="relative flex-1 w-full">
-            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={18} className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={t("Rechercher par titre d'atelier ou nom de formateur...")}
-              className="w-full pl-10 pr-10 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20 transition-all text-slate-800 placeholder-slate-400"
+              placeholder={t("Search by workshop title or trainer name...")}
+              className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-10 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20 transition-all text-slate-800 placeholder-slate-400"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
               >
                 <X size={16} />
               </button>
@@ -183,7 +183,7 @@ export default function Dashboard() {
           </div>
 
           <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-3.5 py-2 rounded-xl border border-slate-200 whitespace-nowrap">
-            {filteredFormations.length} {filteredFormations.length === 1 ? t('Atelier disponible') : t('Ateliers disponibles')}
+            {filteredFormations.length} {filteredFormations.length === 1 ? t('Workshop Available') : t('Workshops Available')}
           </span>
         </div>
 
@@ -191,7 +191,7 @@ export default function Dashboard() {
         {fetchError && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 text-red-700 text-xs">
             <AlertCircle size={18} className="shrink-0 text-red-600" />
-            <p><strong>Erreur de chargement:</strong> {fetchError}</p>
+            <p><strong>Error:</strong> {fetchError}</p>
           </div>
         )}
 
@@ -199,7 +199,7 @@ export default function Dashboard() {
         {loading ? (
           <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 shadow-xs">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-emerald-600 mb-3" />
-            <p className="text-slate-500 text-xs font-medium">{t("Chargement des données...")}</p>
+            <p className="text-slate-500 text-xs font-medium">{t("Loading session database...")}</p>
           </div>
         ) : filteredFormations.length === 0 ? (
           <div className="bg-white rounded-3xl border border-dashed border-slate-300 p-12 text-center flex flex-col items-center justify-center">
@@ -207,12 +207,12 @@ export default function Dashboard() {
               <BookOpen size={26} />
             </div>
             <h3 className="text-sm font-bold text-slate-900">
-              {searchTerm ? t('Aucun atelier correspondant trouvé') : t('Aucune session de formation disponible')}
+              {searchTerm ? t('No matching workshops found') : t('No training sessions available')}
             </h3>
             <p className="text-xs text-slate-500 mt-1 max-w-sm">
               {searchTerm
-                ? `${t('Aucun résultat pour')} "${searchTerm}".`
-                : t('Cliquez sur "Ajouter une formation" pour créer un nouveau registre.')}
+                ? `${t('No results match')} "${searchTerm}".`
+                : t('Click "Add New Formation" above to create your first session register.')}
             </p>
           </div>
         ) : (
@@ -247,9 +247,9 @@ export default function Dashboard() {
                           <User size={15} />
                         </div>
                         <div className="truncate">
-                          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">{t("FORMATEUR")}</p>
+                          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">{t("Trainer")}</p>
                           <p className="text-slate-900 font-semibold truncate">
-                            {item.trainer_name || t('Non assigné')}
+                            {item.trainer_name || t('Unassigned')}
                           </p>
                         </div>
                       </div>
@@ -267,7 +267,7 @@ export default function Dashboard() {
                         <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
                           <MapPin size={14} className="text-emerald-600 shrink-0" />
                           <span className="font-medium text-slate-700 text-[11px] truncate">
-                            {item.location || t('Lieu non spécifié')}
+                            {item.location || t('Location TBD')}
                           </span>
                         </div>
                       </div>
@@ -281,7 +281,7 @@ export default function Dashboard() {
                       className="w-full inline-flex items-center justify-center gap-2 font-semibold text-slate-800 bg-slate-100 hover:bg-emerald-600 hover:text-white active:bg-emerald-700 py-2.5 px-4 rounded-xl text-xs transition-colors duration-200 cursor-pointer touch-manipulation border border-slate-200/80 hover:border-emerald-600"
                     >
                       <Eye size={15} />
-                      <span>{t("Voir l'atelier")}</span>
+                      <span>{t("View Workshop")}</span>
                     </Link>
                   </div>
                 </div>
@@ -298,8 +298,8 @@ export default function Dashboard() {
             
             <div className="bg-slate-900 p-5 text-white flex items-center justify-between border-b border-slate-800">
               <div>
-                <h3 className="text-sm font-bold">{t("Créer une nouvelle formation")}</h3>
-                <p className="text-[11px] text-slate-300">{t("Ajouter un nouveau registre d'atelier.")}</p>
+                <h3 className="text-sm font-bold">{t("Create New Workshop")}</h3>
+                <p className="text-[11px] text-slate-300">{t("Add a formation program register.")}</p>
               </div>
               <button
                 onClick={() => setShowCreateModal(false)}
@@ -312,27 +312,27 @@ export default function Dashboard() {
             <form onSubmit={handleCreateFormation} className="p-6 space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  {t("Titre de la formation *")}
+                  {t("Workshop Title *")}
                 </label>
                 <input
                   type="text"
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder={t("ex. Formation Technique Fibre Optique")}
+                  placeholder={t("e.g. Fiber Optic Technical Training")}
                   className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 bg-slate-50 text-slate-900"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  {t("Nom du formateur")}
+                  {t("Trainer Name")}
                 </label>
                 <input
                   type="text"
                   value={trainerName}
                   onChange={(e) => setTrainerName(e.target.value)}
-                  placeholder={t("ex. Karim Mansouri")}
+                  placeholder={t("e.g. Karim Mansouri")}
                   className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 bg-slate-50 text-slate-900"
                 />
               </div>
@@ -341,7 +341,7 @@ export default function Dashboard() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    {t("Date de session")}
+                    {t("Session Date")}
                   </label>
                   <input
                     type="date"
@@ -353,7 +353,7 @@ export default function Dashboard() {
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    {t("Heure de session")}
+                    {t("Session Time")}
                   </label>
                   <input
                     type="time"
@@ -366,13 +366,13 @@ export default function Dashboard() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  {t("Lieu / Salle")}
+                  {t("Location / Room")}
                 </label>
                 <input
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder={t("ex. Centre de formation Lab 01")}
+                  placeholder={t("e.g. Training Center Lab 01")}
                   className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 bg-slate-50 text-slate-900"
                 />
               </div>
@@ -383,14 +383,14 @@ export default function Dashboard() {
                   onClick={() => setShowCreateModal(false)}
                   className="px-4 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
-                  {t("Annuler")}
+                  {t("Cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={creating}
                   className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-900/20 cursor-pointer disabled:opacity-50"
                 >
-                  {creating ? t('Enregistrement...') : t('Créer la formation')}
+                  {creating ? t('Saving...') : t('Create Workshop')}
                 </button>
               </div>
             </form>
