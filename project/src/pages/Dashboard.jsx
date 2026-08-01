@@ -57,7 +57,7 @@ export default function Dashboard() {
     } catch (err) {
       console.error('Unexpected error:', err);
       setFetchError(err.message);
-    } font-medium {
+    } font-medium ;{
       setLoading(false);
     }
   };
