@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -18,23 +18,33 @@ import {
   Loader2,
   QrCode,
   X,
-  FileText
+  FileText,
+  Trash2,
+  AlertTriangle,
+  Clock,
+  CheckCircle2
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export default function SessionDetail() {
   const { t } = useTranslation();
   const { id } = useParams();
+  const navigate = useNavigate();
   const [workshop, setWorkshop] = useState(null);
   const [attendees, setAttendees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Modals state
   const [showQRModal, setShowQRModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const qrContainerRef = useRef(null);
-
   const studentFormUrl = `${window.location.origin}/attend/${id}`;
+
   useEffect(() => {
     fetchSessionData();
   }, [id]);
@@ -59,7 +69,85 @@ export default function SessionDetail() {
     setLoading(false);
   };
 
-  // Helper to convert imported SVG file path to base64 Data URL for jsPDF
+  // Status calculator with +2 Hours workshop duration buffer
+  const isWorkshopEnded = (dateStr, timeStr) => {
+    if (!dateStr) return false;
+
+    try {
+      let year, month, day;
+
+      if (dateStr.includes('-')) {
+        const parts = dateStr.slice(0, 10).split('-');
+        if (parts[0].length === 4) {
+          [year, month, day] = parts.map(Number);
+        } else {
+          [day, month, year] = parts.map(Number);
+        }
+      } else if (dateStr.includes('/')) {
+        const parts = dateStr.slice(0, 10).split('/');
+        if (parts[0].length === 4) {
+          [year, month, day] = parts.map(Number);
+        } else {
+          [day, month, year] = parts.map(Number);
+        }
+      } else {
+        const parsedDate = new Date(dateStr);
+        if (isNaN(parsedDate.getTime())) return false;
+        year = parsedDate.getFullYear();
+        month = parsedDate.getMonth() + 1;
+        day = parsedDate.getDate();
+      }
+
+      let hours = 23;
+      let minutes = 59;
+      let seconds = 59;
+
+      if (timeStr) {
+        const timeMatch = timeStr.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+        if (timeMatch) {
+          hours = parseInt(timeMatch[1], 10);
+          minutes = parseInt(timeMatch[2], 10);
+          seconds = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
+        }
+      }
+
+      const workshopStart = new Date(year, month - 1, day, hours, minutes, seconds);
+
+      if (isNaN(workshopStart.getTime())) return false;
+
+      // Add 2 hours buffer (2 hours * 60 mins * 60 secs * 1000 ms)
+      const workshopEndTime = new Date(workshopStart.getTime() + (2 * 60 * 60 * 1000));
+
+      return workshopEndTime < new Date();
+    } catch (err) {
+      console.error('Error calculating workshop status:', err);
+      return false;
+    }
+  };
+
+  const hasEnded = isWorkshopEnded(workshop?.date, workshop?.time);
+
+  // Delete Session Handler
+  const confirmDeleteSession = async () => {
+    setDeleting(true);
+    setDeleteError('');
+
+    try {
+      await supabase.from('presences').delete().eq('formation_id', id);
+      const { error } = await supabase.from('formations').delete().eq('id', id);
+
+      if (error) {
+        setDeleteError(error.message);
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setDeleteError(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const getLogoBase64 = () => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -77,14 +165,12 @@ export default function SessionDetail() {
     });
   };
 
-  // Copy Link Action
   const copyDirectLink = () => {
     navigator.clipboard.writeText(studentFormUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Download QR Code Image Action
   const downloadQRCode = () => {
     const svgElement = qrContainerRef.current?.querySelector('svg');
     if (!svgElement) return;
@@ -118,7 +204,6 @@ export default function SessionDetail() {
     image.src = blobURL;
   };
 
-  // Official Attendance Register PDF Export
   const exportPDF = async () => {
     const doc = new jsPDF();
     const primaryColor = [0, 45, 98];
@@ -157,14 +242,14 @@ export default function SessionDetail() {
     doc.setFont('Helvetica', 'normal');
     doc.setTextColor(51, 65, 85);
 
-    doc.text(`• Formation Name: ${workshop?.title || 'N/A'}`, 14, 44);
-    doc.text(`• Creator / Trainer: ${workshop?.trainer_name || 'Unassigned'}`, 14, 50);
+    doc.text(`• ${t("Formation Name")}: ${workshop?.title || 'N/A'}`, 14, 44);
+    doc.text(`• ${t("Trainer")}: ${workshop?.trainer_name || t('Unassigned')}`, 14, 50);
     
     const formattedDate = workshop?.date 
       ? new Date(workshop.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
       : 'N/A';
-    doc.text(`• Date & Duration: ${formattedDate}${workshop?.time ? ` at : ${workshop.time}` : ''}`, 14, 56);
-    doc.text(`• Location / Room: ${workshop?.location || 'N/A'}`, 14, 62);
+    doc.text(`• ${t("Date")}: ${formattedDate}${workshop?.time ? ` ${t("at")} ${workshop.time}` : ''}`, 14, 56);
+    doc.text(`• ${t("Location")}: ${workshop?.location || 'N/A'}`, 14, 62);
 
     doc.setFont('Helvetica', 'bold');
     doc.setFontSize(11);
@@ -176,12 +261,12 @@ export default function SessionDetail() {
       student.full_name || 'N/A',
       student.email || 'N/A',
       student.phone || 'N/A',
-      student.status || 'Participant'
+      student.status || t('Participant')
     ]);
 
     autoTable(doc, {
       startY: 78,
-      head: [['#', 'Participant Name', 'Email', 'Phone', 'Role / Status']],
+      head: [['#', t('Full Name'), t('Email Address'), t('Phone'), t('Status / Role')]],
       body: tableRows,
       headStyles: {
         fillColor: primaryColor,
@@ -204,7 +289,7 @@ export default function SessionDetail() {
     doc.setFont('Helvetica', 'bold');
     doc.setFontSize(10);
     doc.setTextColor(...emeraldColor);
-    doc.text(`Total Attendees: ${attendees.length}`, 14, finalY);
+    doc.text(`${t("Total Attendees")}: ${attendees.length}`, 14, finalY);
 
     finalY += 12;
 
@@ -262,8 +347,6 @@ export default function SessionDetail() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-8">
-        
-        {/* Back to Dashboard */}
         <div>
           <Link
             to="/dashboard"
@@ -273,46 +356,54 @@ export default function SessionDetail() {
           </Link>
         </div>
 
-        {/* Centered Session Detail Header Card */}
         <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-200/80 shadow-xs flex flex-col items-center text-center space-y-5 relative overflow-hidden">
-          {/* Logo */}
-          <div className="mb-6">
-            <img src={logo} alt="Logo" className="h-30 w-auto object-contain" />
+          {/* WORKSHOP STATUS BADGE */}
+          <div className="absolute top-6 right-6 rtl:right-auto rtl:left-6">
+            {hasEnded ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                <CheckCircle2 size={13} className="text-slate-500" />
+                {t("Ended")}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <Clock size={13} className="text-emerald-600" />
+                {t("Upcoming")}
+              </span>
+            )}
           </div>
 
-          {/* Workshop Name */}
+          <div className="mb-2">
+            <img src={logo} alt="Logo" className="h-24 sm:h-28 w-auto object-contain" />
+          </div>
+
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 capitalize tracking-tight max-w-2xl">
             {workshop?.title || t('Loading Session...')}
           </h1>
 
-          {/* Trainer Name */}
           <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
             <User size={16} className="text-emerald-600 shrink-0" />
             <span>{t("Trainer")}: <strong className="text-slate-900">{workshop?.trainer_name || t('Unassigned')}</strong></span>
           </div>
 
-          {/* Date and Time */}
           <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-slate-600">
             <Calendar size={16} className="text-emerald-600 shrink-0" />
             <span>
               {workshop?.date 
                 ? new Date(workshop.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) 
                 : t('Date TBD')}
-              {workshop?.time ? ` at : ${workshop.time}` : ''}
+              {workshop?.time ? ` ${t('at')} ${workshop.time}` : ''}
             </span>
           </div>
 
-          {/* Place */}
           <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-slate-600">
             <MapPin size={16} className="text-emerald-600 shrink-0" />
             <span>{workshop?.location || t('Location TBD')}</span>
           </div>
 
-          {/* Action Buttons Toolbar */}
           <div className="flex flex-wrap items-center justify-center gap-2.5 pt-4 border-t border-slate-100 w-full max-w-lg">
             <button
               onClick={copyDirectLink}
-              className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-xl text-xs transition-all border border-slate-200"
+              className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-xl text-xs transition-all border border-slate-200 cursor-pointer"
               title={t("Copy Link")}
             >
               {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
@@ -321,7 +412,7 @@ export default function SessionDetail() {
 
             <button
               onClick={() => setShowQRModal(true)}
-              className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-sm"
+              className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-sm cursor-pointer"
               title={t("Show QR")}
             >
               <QrCode size={14} />
@@ -330,7 +421,7 @@ export default function SessionDetail() {
 
             <button
               onClick={downloadQRCode}
-              className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold px-4 py-2 rounded-xl text-xs transition-all"
+              className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold px-4 py-2 rounded-xl text-xs transition-all cursor-pointer"
               title={t("Save QR")}
             >
               <Download size={14} />
@@ -339,25 +430,35 @@ export default function SessionDetail() {
 
             <button
               onClick={exportPDF}
-              className="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-sm"
+              className="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-sm cursor-pointer"
               title={t("Export PDF")}
             >
               <FileText size={14} />
               <span>{t("Export PDF")}</span>
             </button>
+
+            <button
+              onClick={() => {
+                setDeleteError('');
+                setShowDeleteModal(true);
+              }}
+              className="inline-flex items-center gap-2 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-bold px-4 py-2 rounded-xl text-xs transition-all border border-rose-200/80 cursor-pointer"
+              title={t("Delete Workshop")}
+            >
+              <Trash2 size={14} />
+              <span>{t("Delete")}</span>
+            </button>
           </div>
         </div>
 
-        {/* Hidden Container for QR Code Export Rendering */}
         <div className="hidden" ref={qrContainerRef}>
           <QRCodeSVG value={studentFormUrl} size={500} level="H" includeMargin={true} />
         </div>
 
-        {/* List of Participants :: Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <h2 className="text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-              <span>{t("list of participants ::")}</span>
+              <span>{t("List of Participants")}</span>
             </h2>
             <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200/60">
               <Users size={14} />
@@ -365,24 +466,20 @@ export default function SessionDetail() {
             </span>
           </div>
 
-          {/* Table & Controls Container */}
           <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-            
-            {/* Search Input Bar */}
             <div className="p-4 border-b border-slate-100 bg-slate-50/50">
               <div className="relative w-full sm:w-80">
-                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search size={16} className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={t("Search registered attendees...")}
-                  className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all shadow-2xs"
+                  className="w-full pl-9 rtl:pl-4 rtl:pr-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all shadow-2xs"
                 />
               </div>
             </div>
 
-            {/* Table Content */}
             {loading ? (
               <div className="text-center py-16 bg-white">
                 <Loader2 size={26} className="animate-spin text-emerald-500 mx-auto mb-2" />
@@ -399,48 +496,41 @@ export default function SessionDetail() {
                 </p>
               </div>
             ) : (
-              <div className="w-full overflow-hidden">
-                <table className="w-full table-fixed text-left text-xs">
+              <div className="w-full overflow-x-auto">
+                <table className="w-full table-fixed text-left rtl:text-right text-xs min-w-[600px]">
                   <thead className="bg-slate-50/80 text-slate-500 uppercase font-bold border-b border-slate-100 tracking-wider">
                     <tr>
-                      <th className="p-4 pl-6 w-[18%]">{t("Full Name")}</th>
+                      <th className="p-4 pl-6 w-[20%]">{t("Full Name")}</th>
                       <th className="p-4 w-[25%]">{t("Email Address")}</th>
-                      <th className="p-4 w-[17%]">{t("Phone")}</th>
+                      <th className="p-4 w-[18%]">{t("Phone")}</th>
                       <th className="p-4 w-[15%]">{t("Status / Role")}</th>
-                      <th className="p-4 pr-6 w-[25%]">{t("Reason")}</th>
+                      <th className="p-4 pr-6 w-[22%]">{t("Reason")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-medium">
                     {filteredAttendees.map((student) => (
                       <tr key={student.id} className="hover:bg-slate-50/80 transition-colors group">
-                        
-                        {/* Full Name */}
                         <td className="p-4 pl-6 font-bold text-slate-900 group-hover:text-emerald-700 transition-colors break-words whitespace-normal leading-relaxed">
                           {student.full_name || '—'}
                         </td>
 
-                        {/* Email Address */}
                         <td className="p-4 text-slate-600 break-all whitespace-normal leading-relaxed">
                           {student.email || '—'}
                         </td>
 
-                        {/* Phone */}
                         <td className="p-4 text-slate-600 break-all whitespace-normal leading-relaxed">
                           {student.phone || '—'}
                         </td>
 
-                        {/* Status / Role */}
                         <td className="p-4 break-words whitespace-normal">
                           <span className="inline-flex items-center px-2.5 py-1 bg-blue-50 text-blue-900 font-bold rounded-lg border border-blue-200/60 text-[11px] break-words">
                             {student.status || t('Participant')}
                           </span>
                         </td>
 
-                        {/* Reason */}
                         <td className="p-4 pr-6 text-slate-600 break-words whitespace-normal leading-relaxed">
                           {student.reason || '—'}
                         </td>
-
                       </tr>
                     ))}
                   </tbody>
@@ -451,11 +541,10 @@ export default function SessionDetail() {
         </div>
       </div>
 
-      {/* QR Code Overlay Modal */}
+      {/* POPUP: QR Code Overlay Modal */}
       {showQRModal && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden text-center relative border border-slate-200/80">
-            
             <div className="bg-slate-900 p-5 text-white flex items-center justify-between border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <QrCode size={18} className="text-emerald-400" />
@@ -463,7 +552,7 @@ export default function SessionDetail() {
               </div>
               <button
                 onClick={() => setShowQRModal(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -486,7 +575,7 @@ export default function SessionDetail() {
               <div className="grid grid-cols-2 gap-2 w-full pt-2">
                 <button
                   onClick={copyDirectLink}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2.5 px-3 rounded-xl text-xs transition-all border border-slate-200 flex items-center justify-center gap-1.5"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2.5 px-3 rounded-xl text-xs transition-all border border-slate-200 flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
                   <span>{copied ? t('Copied') : t('Copy Link')}</span>
@@ -494,7 +583,7 @@ export default function SessionDetail() {
 
                 <button
                   onClick={downloadQRCode}
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-3 rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-1.5"
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-3 rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Download size={14} />
                   <span>{t("Save Image")}</span>
@@ -504,6 +593,49 @@ export default function SessionDetail() {
 
             <div className="p-3 bg-slate-50 border-t border-slate-100">
               <p className="text-[10px] text-slate-400 font-medium">{t("Algérie Télécom • Presence Portal")}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* POPUP: Custom Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl max-w-sm w-full shadow-2xl p-6 border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto border border-rose-200">
+              <AlertTriangle size={24} />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-slate-900">{t("Delete Workshop?")}</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                {t("Are you sure you want to delete")} <strong className="text-slate-800">"{workshop?.title}"</strong>? {t("This action cannot be undone.")}
+              </p>
+            </div>
+
+            {deleteError && (
+              <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs text-left">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="flex gap-2.5 justify-center pt-2">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+                className="flex-1 py-2.5 px-4 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                {t("Cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteSession}
+                disabled={deleting}
+                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-rose-900/20 cursor-pointer disabled:opacity-50"
+              >
+                {deleting ? t("Deleting...") : t("Yes, Delete")}
+              </button>
             </div>
           </div>
         </div>
