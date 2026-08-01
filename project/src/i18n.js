@@ -246,7 +246,7 @@ const resources = {
       "Total": "الإجمالي",
       "Upcoming": "قادمة",
       "Ended": "منتهية",
-      "at": "على الساعة",
+      "at": "على",
       "Error": "خطأ",
       "Add New Formation": "إضافة دورة جديدة",
       "Search by workshop title or trainer name...": "البحث بعنوان الدورة أو اسم المدرب...",
