@@ -40,7 +40,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
             <span className="text-lg sm:text-xl font-extrabold tracking-tight bg-emerald-600 bg-clip-text text-transparent">
-              {t("Algérie Télécom")}
+              {t("ALGERIE TELECOM")}
             </span>
           </div>
           <div className="flex items-center gap-3">
