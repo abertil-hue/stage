@@ -260,7 +260,7 @@ export default function Dashboard() {
                           <Calendar size={14} className="text-emerald-600 shrink-0" />
                           <span className="font-medium text-slate-700 text-[11px] truncate">
                             {formatDateDisplay(item.date)}
-                            {item.time ? ` @ ${item.time}` : ''}
+                            {item.time ? ` at ${item.time}` : ''}
                           </span>
                         </div>
 
