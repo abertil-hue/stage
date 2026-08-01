@@ -1,292 +1,314 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
 
-// French, Arabic, English translations
 const resources = {
   fr: {
     translation: {
-      // General
-      "Algérie Télécom": "Algérie Télécom",
-      "Protected by Enterprise Security Policy • Algérie Télécom ©": "Protégé par la politique de sécurité de l'entreprise • Algérie Télécom ©",
-      "Algérie Télécom • Presence Portal": "Algérie Télécom • Portail de Présence",
-      "Algérie Télécom • Training Portal": "Algérie Télécom • Portail de Formation",
-      
-      // Login
-      "Sign in to manage training formations and registers": "Connectez-vous pour gérer les formations et les registres",
-      "Email Address": "Adresse e-mail",
-      "Password": "Mot de passe",
-      "Authenticating...": "Authentification...",
-      "Sign In To Admin Portal": "Connexion au portail d'administration",
-      
-      // Navbar
-      "Sign Out": "Déconnexion",
-
-      // Dashboard
-      "Formation & Workshop Management": "Gestion des formations et ateliers",
-      "Manage all official corporate training sessions, monitor student sign-in registers, and export session data.": "Gérez toutes les sessions de formation officielles, surveillez les registres de présence et exportez les données.",
-      "Active Workshops": "Ateliers actifs",
-      "Add New Formation": "Ajouter une formation",
-      "Search by workshop title or trainer name...": "Rechercher par titre d'atelier ou nom de formateur...",
-      "Workshops Available": "Ateliers disponibles",
-      "Workshop Available": "Atelier disponible",
-      "Loading session database...": "Chargement de la base de données...",
-      "No matching workshops found": "Aucun atelier correspondant trouvé",
-      "No training sessions available": "Aucune session de formation disponible",
-      "No results match": "Aucun résultat ne correspond à",
-      "Click \"Add New Formation\" above to create your first session register.": "Cliquez sur \"Ajouter une formation\" ci-dessus pour créer votre premier registre.",
-      "Trainer": "Formateur",
-      "Unassigned": "Non assigné",
-      "Date TBD": "Date à définir",
-      "Location TBD": "Lieu à définir",
-      "View Workshop": "Voir l'atelier",
-      "Create New Workshop": "Créer un nouvel atelier",
-      "Add a formation program register.": "Ajouter un registre de programme de formation.",
-      "Workshop Title *": "Titre de l'atelier *",
-      "Trainer Name": "Nom du formateur",
-      "Session Date": "Date de la session",
-      "Session Time": "Heure de la session",
-      "Location / Room": "Lieu / Salle",
-      "Cancel": "Annuler",
-      "Saving...": "Enregistrement...",
-      "Create Workshop": "Créer l'atelier",
-      "e.g. Fiber Optic Technical Training": "ex: Formation technique fibre optique",
-      "e.g. Karim Mansouri": "ex: Karim Mansouri",
-      "e.g. Training Center Lab 01": "ex: Lab 01, Centre de formation",
-
-      // Session Detail
-      "Back to Dashboard": "Retour au tableau de bord",
-      "Loading Session...": "Chargement de la session...",
-      "Copy Link": "Copier le lien",
-      "Copied Link": "Lien copié",
-      "Copied": "Copié",
-      "Show QR": "Afficher QR",
-      "Save QR": "Enregistrer QR",
-      "Save Image": "Enregistrer l'image",
-      "Export PDF": "Exporter en PDF",
-      "list of participants ::": "Liste des participants ::",
-      "Search registered attendees...": "Rechercher des participants enregistrés...",
-      "Loading participant register...": "Chargement du registre des participants...",
-      "No registered attendees found": "Aucun participant enregistré trouvé",
-      "Share the QR code or direct link with participants to collect signatures.": "Partagez le QR code ou le lien direct avec les participants.",
-      "Full Name": "Nom Complet",
-      "Phone": "Téléphone",
-      "Status / Role": "Statut / Rôle",
-      "Reason": "Raison",
-      "Participant": "Participant",
-      "Attendance QR Code": "QR Code de présence",
-      "Scan with mobile camera to submit presence.": "Scannez avec votre appareil photo pour soumettre votre présence.",
-      "Total Attendees": "Total des participants",
-
-      // Attend
-      "Welcome to this Workshop": "Bienvenue à cet atelier",
-      "Loading workshop details...": "Chargement des détails de l'atelier...",
-      "Workshop Sign-In": "Inscription à l'atelier",
-      "Full Name *": "Nom Complet *",
-      "Enter your full name": "Entrez votre nom complet",
-      "Email Address *": "Adresse e-mail *",
-      "e.g. participant@example.com": "ex: participant@exemple.com",
-      "Phone Number": "Numéro de téléphone",
-      "Status / Function": "Statut / Fonction",
-      "e.g. Employee / Student": "ex: Employé / Étudiant",
-      "Reason / Motivation": "Raison / Motivation",
-      "Brief description...": "Brève description...",
-      "CONFIRMING...": "CONFIRMATION...",
-      "CONFIRM ATTENDANCE": "CONFIRMER LA PRÉSENCE",
-      "Attendance Recorded!": "Présence enregistrée !",
-      "Your registration for": "Votre inscription pour",
-      "has been submitted successfully.": "a été soumise avec succès.",
-      "the workshop": "l'atelier"
+      nav: {
+        title: "Algérie Télécom",
+        subtitle: "Gestion des Formations",
+        logout: "Déconnexion",
+        dashboard: "Tableau de bord"
+      },
+      login: {
+        title: "Espace Administration",
+        subtitle: "Connectez-vous pour gérer les sessions et présences",
+        emailLabel: "Adresse Email",
+        emailPlaceholder: "exemple@algerietelecom.dz",
+        passwordLabel: "Mot de passe",
+        passwordPlaceholder: "••••••••",
+        submitButton: "Se connecter",
+        submitting: "Connexion en cours...",
+        errorInvalid: "Identifiants invalides. Veuillez réessayer."
+      },
+      dashboard: {
+        title: "Formations & Workshops",
+        subtitle: "Gérez vos sessions de formation et suivez les émargements",
+        searchPlaceholder: "Rechercher par titre, formateur ou lieu...",
+        createButton: "Nouvelle Session",
+        noSessions: "Aucune session de formation trouvée.",
+        modalTitle: "Créer une nouvelle session",
+        form: {
+          titleLabel: "Titre de la formation",
+          titlePlaceholder: "ex: Formation Cybersécurité & Cloud",
+          trainerLabel: "Formateur / Intervenant",
+          trainerPlaceholder: "ex: Ing. Ahmed Benali",
+          dateLabel: "Date et Heure",
+          locationLabel: "Lieu / Salle",
+          locationPlaceholder: "ex: Salle de Conférence - Direction Générale",
+          descriptionLabel: "Description",
+          descriptionPlaceholder: "Détails et objectifs de la session...",
+          submit: "Créer la session",
+          submitting: "Création...",
+          cancel: "Annuler"
+        }
+      },
+      session: {
+        backButton: "Retour au tableau de bord",
+        detailsTitle: "Détails de la session",
+        date: "Date",
+        trainer: "Formateur",
+        location: "Lieu",
+        totalAttendees: "Total Émargés",
+        presentCount: "Présents",
+        absentCount: "Absents",
+        qrTitle: "Code QR d'émargement",
+        qrSubtitle: "Scannez ce code ou partagez le lien pour emarger",
+        copyLink: "Copier le lien",
+        linkCopied: "Lien copié !",
+        exportPdf: "Exporter en PDF",
+        attendeesList: "Registre des Présences",
+        emptyAttendees: "Aucun émargement enregistré pour le moment.",
+        columns: {
+          name: "Nom & Prénom",
+          email: "Email",
+          phone: "Téléphone",
+          status: "Statut",
+          reason: "Motif d'absence",
+          time: "Heure d'enregistrement"
+        },
+        statusPresent: "Présent(e)",
+        statusAbsent: "Absent(e)"
+      },
+      attend: {
+        badge: "Algérie Télécom - Émargement",
+        title: "Feuille d'émargement",
+        subtitle: "Veuillez remplir le formulaire pour valider votre présence",
+        nameLabel: "Nom et Prénom",
+        namePlaceholder: "ex: Karim Mansouri",
+        emailLabel: "Adresse Email",
+        emailPlaceholder: "ex: karim.m@algerietelecom.dz",
+        phoneLabel: "Numéro de Téléphone",
+        phonePlaceholder: "ex: 0661XX XX XX",
+        statusLabel: "Votre Statut",
+        presentOption: "Présent(e)",
+        absentOption: "Absent(e)",
+        reasonLabel: "Motif d'absence",
+        reasonPlaceholder: "Précisez la raison de votre absence...",
+        submitButton: "Valider mon émargement",
+        submitting: "Enregistrement en cours...",
+        successTitle: "Émargement enregistré !",
+        successMessage: "Merci. Votre présence a bien été enregistrée dans le système.",
+        alreadySubmittedTitle: "Déjà enregistré",
+        alreadySubmittedMessage: "Vous avez déjà soumis votre émargement pour cette session."
+      }
     }
   },
   en: {
     translation: {
-      "Algérie Télécom": "Algérie Télécom",
-      "Protected by Enterprise Security Policy • Algérie Télécom ©": "Protected by Enterprise Security Policy • Algérie Télécom ©",
-      "Algérie Télécom • Presence Portal": "Algérie Télécom • Presence Portal",
-      "Algérie Télécom • Training Portal": "Algérie Télécom • Training Portal",
-      
-      "Sign in to manage training formations and registers": "Sign in to manage training formations and registers",
-      "Email Address": "Email Address",
-      "Password": "Password",
-      "Authenticating...": "Authenticating...",
-      "Sign In To Admin Portal": "Sign In To Admin Portal",
-      
-      "Sign Out": "Sign Out",
-
-      "Formation & Workshop Management": "Formation & Workshop Management",
-      "Manage all official corporate training sessions, monitor student sign-in registers, and export session data.": "Manage all official corporate training sessions, monitor student sign-in registers, and export session data.",
-      "Active Workshops": "Active Workshops",
-      "Add New Formation": "Add New Formation",
-      "Search by workshop title or trainer name...": "Search by workshop title or trainer name...",
-      "Workshops Available": "Workshops Available",
-      "Workshop Available": "Workshop Available",
-      "Loading session database...": "Loading session database...",
-      "No matching workshops found": "No matching workshops found",
-      "No training sessions available": "No training sessions available",
-      "No results match": "No results match",
-      "Click \"Add New Formation\" above to create your first session register.": "Click \"Add New Formation\" above to create your first session register.",
-      "Trainer": "Trainer",
-      "Unassigned": "Unassigned",
-      "Date TBD": "Date TBD",
-      "Location TBD": "Location TBD",
-      "View Workshop": "View Workshop",
-      "Create New Workshop": "Create New Workshop",
-      "Add a formation program register.": "Add a formation program register.",
-      "Workshop Title *": "Workshop Title *",
-      "Trainer Name": "Trainer Name",
-      "Session Date": "Session Date",
-      "Session Time": "Session Time",
-      "Location / Room": "Location / Room",
-      "Cancel": "Cancel",
-      "Saving...": "Saving...",
-      "Create Workshop": "Create Workshop",
-      "e.g. Fiber Optic Technical Training": "e.g. Fiber Optic Technical Training",
-      "e.g. Karim Mansouri": "e.g. Karim Mansouri",
-      "e.g. Training Center Lab 01": "e.g. Training Center Lab 01",
-
-      "Back to Dashboard": "Back to Dashboard",
-      "Loading Session...": "Loading Session...",
-      "Copy Link": "Copy Link",
-      "Copied Link": "Copied Link",
-      "Copied": "Copied",
-      "Show QR": "Show QR",
-      "Save QR": "Save QR",
-      "Save Image": "Save Image",
-      "Export PDF": "Export PDF",
-      "list of participants ::": "list of participants ::",
-      "Search registered attendees...": "Search registered attendees...",
-      "Loading participant register...": "Loading participant register...",
-      "No registered attendees found": "No registered attendees found",
-      "Share the QR code or direct link with participants to collect signatures.": "Share the QR code or direct link with participants to collect signatures.",
-      "Full Name": "Full Name",
-      "Phone": "Phone",
-      "Status / Role": "Status / Role",
-      "Reason": "Reason",
-      "Participant": "Participant",
-      "Attendance QR Code": "Attendance QR Code",
-      "Scan with mobile camera to submit presence.": "Scan with mobile camera to submit presence.",
-      "Total Attendees": "Total Attendees",
-
-      "Welcome to this Workshop": "Welcome to this Workshop",
-      "Loading workshop details...": "Loading workshop details...",
-      "Workshop Sign-In": "Workshop Sign-In",
-      "Full Name *": "Full Name *",
-      "Enter your full name": "Enter your full name",
-      "Email Address *": "Email Address *",
-      "e.g. participant@example.com": "e.g. participant@example.com",
-      "Phone Number": "Phone Number",
-      "Status / Function": "Status / Function",
-      "e.g. Employee / Student": "e.g. Employee / Student",
-      "Reason / Motivation": "Reason / Motivation",
-      "Brief description...": "Brief description...",
-      "CONFIRMING...": "CONFIRMING...",
-      "CONFIRM ATTENDANCE": "CONFIRM ATTENDANCE",
-      "Attendance Recorded!": "Attendance Recorded!",
-      "Your registration for": "Your registration for",
-      "has been submitted successfully.": "has been submitted successfully.",
-      "the workshop": "the workshop"
+      nav: {
+        title: "Algérie Télécom",
+        subtitle: "Training Management",
+        logout: "Logout",
+        dashboard: "Dashboard"
+      },
+      login: {
+        title: "Admin Portal",
+        subtitle: "Log in to manage training sessions and attendance",
+        emailLabel: "Email Address",
+        emailPlaceholder: "example@algerietelecom.dz",
+        passwordLabel: "Password",
+        passwordPlaceholder: "••••••••",
+        submitButton: "Log In",
+        submitting: "Logging in...",
+        errorInvalid: "Invalid credentials. Please try again."
+      },
+      dashboard: {
+        title: "Training & Workshops",
+        subtitle: "Manage training sessions and track participant attendance",
+        searchPlaceholder: "Search by title, trainer, or location...",
+        createButton: "New Session",
+        noSessions: "No training sessions found.",
+        modalTitle: "Create New Session",
+        form: {
+          titleLabel: "Session Title",
+          titlePlaceholder: "e.g., Cybersecurity & Cloud Training",
+          trainerLabel: "Trainer / Speaker",
+          trainerPlaceholder: "e.g., Eng. Ahmed Benali",
+          dateLabel: "Date & Time",
+          locationLabel: "Location / Room",
+          locationPlaceholder: "e.g., Main HQ Conference Room",
+          descriptionLabel: "Description",
+          descriptionPlaceholder: "Session details and objectives...",
+          submit: "Create Session",
+          submitting: "Creating...",
+          cancel: "Cancel"
+        }
+      },
+      session: {
+        backButton: "Back to Dashboard",
+        detailsTitle: "Session Details",
+        date: "Date",
+        trainer: "Trainer",
+        location: "Location",
+        totalAttendees: "Total Signed-in",
+        presentCount: "Present",
+        absentCount: "Absent",
+        qrTitle: "Attendance QR Code",
+        qrSubtitle: "Scan this code or share the link to mark attendance",
+        copyLink: "Copy Link",
+        linkCopied: "Link Copied!",
+        exportPdf: "Export PDF",
+        attendeesList: "Attendance Register",
+        emptyAttendees: "No attendance records registered yet.",
+        columns: {
+          name: "Full Name",
+          email: "Email",
+          phone: "Phone",
+          status: "Status",
+          reason: "Absence Reason",
+          time: "Timestamp"
+        },
+        statusPresent: "Present",
+        statusAbsent: "Absent"
+      },
+      attend: {
+        badge: "Algérie Télécom - Attendance",
+        title: "Attendance Register",
+        subtitle: "Please fill out the form to confirm your attendance",
+        nameLabel: "Full Name",
+        namePlaceholder: "e.g., Karim Mansouri",
+        emailLabel: "Email Address",
+        emailPlaceholder: "e.g., karim.m@algerietelecom.dz",
+        phoneLabel: "Phone Number",
+        phonePlaceholder: "e.g., 0661XX XX XX",
+        statusLabel: "Your Status",
+        presentOption: "Present",
+        absentOption: "Absent",
+        reasonLabel: "Reason for Absence",
+        reasonPlaceholder: "Specify your reason for absence...",
+        submitButton: "Submit Attendance",
+        submitting: "Submitting...",
+        successTitle: "Attendance Registered!",
+        successMessage: "Thank you. Your attendance has been successfully logged.",
+        alreadySubmittedTitle: "Already Submitted",
+        alreadySubmittedMessage: "You have already submitted your attendance for this session."
+      }
     }
   },
   ar: {
     translation: {
-      "Algérie Télécom": "اتصالات الجزائر",
-      "Protected by Enterprise Security Policy • Algérie Télécom ©": "محمي بسياسة أمان الشركة • اتصالات الجزائر ©",
-      "Algérie Télécom • Presence Portal": "اتصالات الجزائر • بوابة الحضور",
-      "Algérie Télécom • Training Portal": "اتصالات الجزائر • بوابة التدريب",
-
-      "Sign in to manage training formations and registers": "تسجيل الدخول لإدارة التكوينات وسجلات الحضور",
-      "Email Address": "عنوان البريد الإلكتروني",
-      "Password": "كلمة المرور",
-      "Authenticating...": "جاري المصادقة...",
-      "Sign In To Admin Portal": "تسجيل الدخول إلى بوابة الإدارة",
-      
-      "Sign Out": "تسجيل الخروج",
-
-      "Formation & Workshop Management": "إدارة الدورات التدريبية وورش العمل",
-      "Manage all official corporate training sessions, monitor student sign-in registers, and export session data.": "إدارة جميع الدورات التدريبية الرسمية، ومراقبة سجلات الحضور، وتصدير البيانات.",
-      "Active Workshops": "الورشات النشطة",
-      "Add New Formation": "إضافة دورة جديدة",
-      "Search by workshop title or trainer name...": "البحث بعنوان الدورة أو اسم المدرب...",
-      "Workshops Available": "ورشات متاحة",
-      "Workshop Available": "ورشة متاحة",
-      "Loading session database...": "جاري تحميل قاعدة بيانات الجلسات...",
-      "No matching workshops found": "لم يتم العثور على ورشات مطابقة",
-      "No training sessions available": "لا توجد دورات تدريبية متاحة",
-      "No results match": "لا توجد نتائج مطابقة",
-      "Click \"Add New Formation\" above to create your first session register.": "انقر على \"إضافة دورة جديدة\" لإنشاء أول سجل حضور.",
-      "Trainer": "المدرب",
-      "Unassigned": "غير معين",
-      "Date TBD": "تاريخ غير محدد",
-      "Location TBD": "موقع غير محدد",
-      "View Workshop": "عرض الورشة",
-      "Create New Workshop": "إنشاء ورشة جديدة",
-      "Add a formation program register.": "إضافة سجل لبرنامج تدريبي.",
-      "Workshop Title *": "عنوان الورشة *",
-      "Trainer Name": "اسم المدرب",
-      "Session Date": "تاريخ الجلسة",
-      "Session Time": "وقت الجلسة",
-      "Location / Room": "المكان / القاعة",
-      "Cancel": "إلغاء",
-      "Saving...": "جاري الحفظ...",
-      "Create Workshop": "إنشاء ورشة",
-      "e.g. Fiber Optic Technical Training": "مثال: تدريب تقني على الألياف البصرية",
-      "e.g. Karim Mansouri": "مثال: كريم منصوري",
-      "e.g. Training Center Lab 01": "مثال: مختبر مركز التدريب 01",
-
-      "Back to Dashboard": "العودة إلى لوحة القيادة",
-      "Loading Session...": "جاري تحميل الجلسة...",
-      "Copy Link": "نسخ الرابط",
-      "Copied Link": "تم نسخ الرابط",
-      "Copied": "منسوخ",
-      "Show QR": "عرض رمز الاستجابة",
-      "Save QR": "حفظ الرمز",
-      "Save Image": "حفظ الصورة",
-      "Export PDF": "تصدير بصيغة PDF",
-      "list of participants ::": "قائمة المشاركين ::",
-      "Search registered attendees...": "البحث في الحضور المسجلين...",
-      "Loading participant register...": "جاري تحميل سجل المشاركين...",
-      "No registered attendees found": "لم يتم العثور على حضور مسجلين",
-      "Share the QR code or direct link with participants to collect signatures.": "شارك رمز الاستجابة السريعة أو الرابط مع المشاركين.",
-      "Full Name": "الاسم الكامل",
-      "Phone": "رقم الهاتف",
-      "Status / Role": "الحالة / الدور",
-      "Reason": "السبب",
-      "Participant": "مشارك",
-      "Attendance QR Code": "رمز الاستجابة السريعة للحضور",
-      "Scan with mobile camera to submit presence.": "امسح بكاميرا الهاتف لتأكيد الحضور.",
-      "Total Attendees": "إجمالي الحضور",
-
-      "Welcome to this Workshop": "مرحباً بكم في هذه الورشة",
-      "Loading workshop details...": "جاري تحميل تفاصيل الورشة...",
-      "Workshop Sign-In": "تسجيل الدخول للورشة",
-      "Full Name *": "الاسم الكامل *",
-      "Enter your full name": "أدخل اسمك الكامل",
-      "Email Address *": "البريد الإلكتروني *",
-      "e.g. participant@example.com": "مثال: participant@example.com",
-      "Phone Number": "رقم الهاتف",
-      "Status / Function": "الصفة / الوظيفة",
-      "e.g. Employee / Student": "مثال: موظف / طالب",
-      "Reason / Motivation": "السبب / الدافع",
-      "Brief description...": "وصف موجز...",
-      "CONFIRMING...": "جاري التأكيد...",
-      "CONFIRM ATTENDANCE": "تأكيد الحضور",
-      "Attendance Recorded!": "تم تسجيل الحضور!",
-      "Your registration for": "لقد تم تسجيلك لـ",
-      "has been submitted successfully.": "بنجاح.",
-      "the workshop": "الورشة"
+      nav: {
+        title: "اتصالات الجزائر",
+        subtitle: "إدارة الدورات التدريبية",
+        logout: "تسجيل الخروج",
+        dashboard: "لوحة التحكم"
+      },
+      login: {
+        title: "بوابة الإدارة",
+        subtitle: "قم بتسجيل الدخول لإدارة الدورات وسجلات الحضور",
+        emailLabel: "البريد الإلكتروني",
+        emailPlaceholder: "example@algerietelecom.dz",
+        passwordLabel: "كلمة المرور",
+        passwordPlaceholder: "••••••••",
+        submitButton: "تسجيل الدخول",
+        submitting: "جاري الدخول...",
+        errorInvalid: "بيانات الاعتماد غير صحيحة. يرجى المحاولة مرة أخرى."
+      },
+      dashboard: {
+        title: "الدورات التدريبية وورش العمل",
+        subtitle: "إدارة دورات التدريب ومتابعة تسجيلات الحضور",
+        searchPlaceholder: "البحث حسب العنوان، المدرب أو المكان...",
+        createButton: "دورة جديدة",
+        noSessions: "لم يتم العثور على أي دورات تدريبية.",
+        modalTitle: "إنشاء دورة تدريبية جديدة",
+        form: {
+          titleLabel: "عنوان الدورة",
+          titlePlaceholder: "مثال: تدريب الأمن السيبراني والسحابة",
+          trainerLabel: "المدرب / المحاضر",
+          trainerPlaceholder: "مثال: المهندس أحمد بن علي",
+          dateLabel: "التاريخ والوقت",
+          locationLabel: "المكان / القاعة",
+          locationPlaceholder: "مثال: قاعة المحاضرات - المديرية العامة",
+          descriptionLabel: "الوصف",
+          descriptionPlaceholder: "تفاصيل وأهداف الدورة التدريبية...",
+          submit: "إنشاء الدورة",
+          submitting: "جاري الإنشاء...",
+          cancel: "إلغاء"
+        }
+      },
+      session: {
+        backButton: "العودة إلى لوحة التحكم",
+        detailsTitle: "تفاصيل الدورة",
+        date: "التاريخ",
+        trainer: "المدرب",
+        location: "المكان",
+        totalAttendees: "إجمالي المسجلين",
+        presentCount: "الحاضرون",
+        absentCount: "الغائبون",
+        qrTitle: "رمز QR لتسجيل الحضور",
+        qrSubtitle: "امسح هذا الرمز ضوئياً أو شارك الرابط لتسجيل الحضور",
+        copyLink: "نسخ الرابط",
+        linkCopied: "تم نسخ الرابط!",
+        exportPdf: "تصدير بصيغة PDF",
+        attendeesList: "سجل الحضور",
+        emptyAttendees: "لم يتم تسجيل أي حضور حتى الآن.",
+        columns: {
+          name: "الاسم الكامل",
+          email: "البريد الإلكتروني",
+          phone: "رقم الهاتف",
+          status: "الحالة",
+          reason: "سبب الغياب",
+          time: "وقت التسجيل"
+        },
+        statusPresent: "حاضر",
+        statusAbsent: "غائب"
+      },
+      attend: {
+        badge: "اتصالات الجزائر - تسجيل الحضور",
+        title: "استمارة الإمارجمنت (تسجيل الحضور)",
+        subtitle: "يرجى ملء النموذج لتأكيد حضورك للدورة",
+        nameLabel: "الاسم واللقب",
+        namePlaceholder: "مثال: كريم منصوري",
+        emailLabel: "البريد الإلكتروني",
+        emailPlaceholder: "مثال: karim.m@algerietelecom.dz",
+        phoneLabel: "رقم الهاتف",
+        phonePlaceholder: "مثال: 0661XX XX XX",
+        statusLabel: "حالة الحضور",
+        presentOption: "حاضر(ة)",
+        absentOption: "غائب(ة)",
+        reasonLabel: "سبب الغياب",
+        reasonPlaceholder: "اذكر سبب الغياب...",
+        submitButton: "تأكيد تسجيل الحضور",
+        submitting: "جاري التسجيل...",
+        successTitle: "تم تسجيل حضورك بنجاح!",
+        successMessage: "شكراً لك. تم حفظ بيانات حضورك في النظام بنجاح.",
+        alreadySubmittedTitle: "تم التسجيل سابقاً",
+        alreadySubmittedMessage: "لقد قمت بتسجيل حضورك لهذه الدورة بالفعل."
+      }
     }
   }
 };
 
+const setDocumentLanguage = (lng) => {
+  const base = lng ? lng.split('-')[0] : lng;
+  document.dir = base === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.lang = base || 'fr';
+};
+
 i18n
+  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources,
-    lng: "fr", // default language
-    fallbackLng: "fr",
+    fallbackLng: 'fr',
+    detection: {
+      order: ['querystring', 'localStorage', 'cookie', 'navigator', 'htmlTag'],
+      caches: ['localStorage', 'cookie']
+    },
     interpolation: {
-      escapeValue: false
+      escapeValue: false // React handles XSS escaping automatically
     }
+  })
+  .then(() => {
+    // apply direction/language on initial load
+    setDocumentLanguage(i18n.language);
   });
+
+// update on subsequent language changes
+i18n.on('languageChanged', (lng) => {
+  setDocumentLanguage(lng);
+});
 
 export default i18n;

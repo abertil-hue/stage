@@ -4,13 +4,14 @@ import { useTranslation } from 'react-i18next';
 
 export default function LanguageSelector() {
   const { i18n } = useTranslation();
-  const [currentLang, setCurrentLang] = useState('FR');
+  const getBaseLang = (lng) => (lng ? lng.split('-')[0].toUpperCase() : 'FR');
+  const [currentLang, setCurrentLang] = useState(getBaseLang(i18n.language));
   const [showLangDropdown, setShowLangDropdown] = useState(false);
 
   useEffect(() => {
-    const langCode = i18n.language ? i18n.language.toUpperCase() : 'FR';
-    setCurrentLang(langCode);
-    document.documentElement.dir = langCode === 'AR' ? 'rtl' : 'ltr';
+    const base = getBaseLang(i18n.language);
+    setCurrentLang(base);
+    document.documentElement.dir = base === 'AR' ? 'rtl' : 'ltr';
   }, [i18n.language]);
 
   const languages = [
