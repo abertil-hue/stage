@@ -33,6 +33,7 @@ export default function Dashboard() {
   const [trainerName, setTrainerName] = useState('');
   const [location, setLocation] = useState('');
   const [creating, setCreating] = useState(false);
+  const [modalError, setModalError] = useState('');
 
   useEffect(() => {
     fetchFormations();
@@ -56,13 +57,33 @@ export default function Dashboard() {
     } catch (err) {
       console.error('Unexpected error:', err);
       setFetchError(err.message);
-    } finally {
+    } font-medium {
       setLoading(false);
     }
   };
 
   const handleCreateFormation = async (e) => {
     e.preventDefault();
+    setModalError('');
+
+    // --- 1. Date Validation ---
+    if (date) {
+      const selectedYear = new Date(date).getFullYear();
+      if (isNaN(selectedYear) || selectedYear < 2024 || selectedYear > 2035) {
+        setModalError(t('Please select a valid date between 2024 and 2035.'));
+        return;
+      }
+    }
+
+    // --- 2. Time Validation (07:00 AM - 07:00 PM) ---
+    if (time) {
+      const [hours] = time.split(':').map(Number);
+      if (hours < 7 || hours >= 19) {
+        setModalError(t('Workshop hours must be scheduled between 07:00 AM and 07:00 PM.'));
+        return;
+      }
+    }
+
     setCreating(true);
 
     try {
@@ -85,23 +106,24 @@ export default function Dashboard() {
         setTime('');
         setTrainerName('');
         setLocation('');
+        setModalError('');
         setShowCreateModal(false);
         fetchFormations();
       } else {
-        alert('Error creating workshop: ' + error.message);
+        setModalError('Error creating workshop: ' + error.message);
       }
     } catch (err) {
-      alert('Error creating workshop: ' + err.message);
+      setModalError('Error creating workshop: ' + err.message);
     } finally {
       setCreating(false);
     }
   };
 
-  // Helper for safe date display
+  // Safe date display helper
   const formatDateDisplay = (dateString) => {
     if (!dateString) return t('Date TBD');
     const parsed = new Date(dateString);
-    if (isNaN(parsed.getTime())) return dateString;
+    if (isNaN(parsed.getTime())) return t('Date TBD');
     return parsed.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -152,7 +174,10 @@ export default function Dashboard() {
             </div>
 
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => {
+                setModalError('');
+                setShowCreateModal(true);
+              }}
               className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold px-4 py-2.5 rounded-xl text-xs transition-all shadow-xs hover:shadow-md cursor-pointer"
             >
               <Plus size={16} />
@@ -310,6 +335,14 @@ export default function Dashboard() {
             </div>
 
             <form onSubmit={handleCreateFormation} className="p-6 space-y-4">
+              {/* Error Box */}
+              {modalError && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2">
+                  <AlertCircle size={16} className="shrink-0 text-red-600" />
+                  <span>{modalError}</span>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   {t("Workshop Title *")}
@@ -345,6 +378,8 @@ export default function Dashboard() {
                   </label>
                   <input
                     type="date"
+                    min="2024-01-01"
+                    max="2035-12-31"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 bg-slate-50 text-slate-900"
@@ -357,6 +392,8 @@ export default function Dashboard() {
                   </label>
                   <input
                     type="time"
+                    min="07:00"
+                    max="19:00"
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
                     className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 bg-slate-50 text-slate-900"
