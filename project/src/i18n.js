@@ -1,29 +1,28 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-// French, Arabic, English translations
 const resources = {
   fr: {
     translation: {
-      // General
       "Algérie Télécom": "Algérie Télécom",
-      "Protected by Enterprise Security Policy • Algérie Télécom ©": "Protégé par la politique de sécurité de l'entreprise • Algérie Télécom ©",
       "Algérie Télécom • Presence Portal": "Algérie Télécom • Portail de Présence",
       "Algérie Télécom • Training Portal": "Algérie Télécom • Portail de Formation",
-      
-      // Login
+      "Description": "Description",
+      "Attendance Register": "Registre de présence",
+      "Session Detail": "Détail de la session",
+
+      "Login": "Connexion",
       "Sign in to manage training formations and registers": "Connectez-vous pour gérer les formations et les registres",
       "Email Address": "Adresse e-mail",
       "Password": "Mot de passe",
       "Authenticating...": "Authentification...",
       "Sign In To Admin Portal": "Connexion au portail d'administration",
-      
-      // Navbar
+
       "Sign Out": "Déconnexion",
 
-      // Dashboard & General Statuses
+      "Dashboard": "Tableau de bord",
       "Formation & Workshop Management": "Gestion des formations et ateliers",
-      "Manage all official corporate training sessions, monitor student sign-in registers, and export session data.": "Gérez toutes les sessions de formation officielles, surveillez les registres de présence et exportez les données.",
+      "Manage all official corporate training sessions, monitor student sign-in registers, and export session data.": "Gérez toutes les sessions de formation officielles, surveillez les registres de présence et exportez les données de session.",
       "Active Workshops": "Ateliers actifs",
       "Total": "Total",
       "Upcoming": "À venir",
@@ -31,14 +30,14 @@ const resources = {
       "at": "à",
       "Error": "Erreur",
       "Add New Formation": "Ajouter une formation",
-      "Search by workshop title or trainer name...": "Rechercher par titre d'atelier ou nom de formateur...",
+      "Search by workshop title or trainer name": "Rechercher par titre d'atelier ou nom de formateur",
       "Workshops Available": "Ateliers disponibles",
       "Workshop Available": "Atelier disponible",
       "Loading session database...": "Chargement de la base de données...",
       "No matching workshops found": "Aucun atelier correspondant trouvé",
       "No training sessions available": "Aucune session de formation disponible",
       "No results match": "Aucun résultat ne correspond à",
-      "Click \"Add New Formation\" above to create your first session register.": "Cliquez sur \"Ajouter une formation\" ci-dessus pour créer votre premier registre.",
+      "Click \"Add New Formation\" above to create your first session register.": "Cliquez sur « Ajouter une formation » ci-dessus pour créer votre premier registre.",
       "Trainer": "Formateur",
       "Unassigned": "Non assigné",
       "Date TBD": "Date à définir",
@@ -61,77 +60,73 @@ const resources = {
       "Cancel": "Annuler",
       "Saving...": "Enregistrement...",
       "Create Workshop": "Créer l'atelier",
-      "e.g. Fiber Optic Technical Training": "ex: Formation technique fibre optique",
-      "e.g. Karim Mansouri": "ex: Karim Mansouri",
-      "e.g. Training Center Lab 01": "ex: Lab 01, Centre de formation",
       "Please select a valid date between 2024 and 2035.": "Veuillez sélectionner une date valide entre 2024 et 2035.",
       "Workshop hours must be scheduled between 07:00 AM and 07:00 PM.": "Les heures de l'atelier doivent être programmées entre 07:00 et 19:00.",
       "Error creating workshop": "Erreur lors de la création de l'atelier",
 
-      // Session Detail
       "Back to Dashboard": "Retour au tableau de bord",
       "Loading Session...": "Chargement de la session...",
       "Copy Link": "Copier le lien",
       "Copied Link": "Lien copié",
       "Copied": "Copié",
-      "Show QR": "Afficher QR",
-      "Save QR": "Enregistrer QR",
+      "Show QR": "Afficher le QR Code",
+      "Save QR": "Enregistrer le QR",
       "Save Image": "Enregistrer l'image",
       "Export PDF": "Exporter en PDF",
+      "Export CSV": "Exporter en CSV",
+      "Export CSV (.csv)": "Exporter en CSV (.csv)",
       "List of Participants": "Liste des participants",
-      "list of participants ::": "Liste des participants ::",
-      "Search registered attendees...": "Rechercher des participants enregistrés...",
+      "Search registered attendees": "Rechercher des participants enregistrés",
       "Loading participant register...": "Chargement du registre des participants...",
       "No registered attendees found": "Aucun participant enregistré trouvé",
-      "Share the QR code or direct link with participants to collect signatures.": "Partagez le QR code ou le lien direct avec les participants.",
+      "Share the QR code or direct link with participants to collect signatures.": "Partagez le QR code ou le lien direct avec les participants pour recueillir les emargements.",
       "Full Name": "Nom Complet",
       "Phone": "Téléphone",
       "Status / Role": "Statut / Rôle",
-      "Reason": "Raison",
+      "Reason": "Motif",
       "Participant": "Participant",
       "Attendance QR Code": "QR Code de présence",
-      "Scan with mobile camera to submit presence.": "Scannez avec votre appareil photo pour soumettre votre présence.",
+      "Scan with mobile camera to submit presence.": "Scannez avec votre appareil photo pour confirmer votre présence.",
       "Total Attendees": "Total des participants",
       "Formation Name": "Nom de la formation",
       "Date": "Date",
       "Location": "Lieu",
 
-      // Attend
       "Welcome to this Workshop": "Bienvenue à cet atelier",
       "Loading workshop details...": "Chargement des détails de l'atelier...",
-      "Workshop Sign-In": "Inscription à l'atelier",
+      "Workshop Sign-In": "Émargement à l'atelier",
       "Full Name *": "Nom Complet *",
-      "Enter your full name": "Entrez votre nom complet",
+      "Enter your full name": "Saisissez votre nom complet",
       "Email Address *": "Adresse e-mail *",
-      "e.g. participant@example.com": "ex: participant@exemple.com",
       "Phone Number": "Numéro de téléphone",
       "Status / Function": "Statut / Fonction",
-      "e.g. Employee / Student": "ex: Employé / Étudiant",
-      "Reason / Motivation": "Raison / Motivation",
-      "Brief description...": "Brève description...",
-      "CONFIRMING...": "CONFIRMATION...",
+      "Reason / Motivation": "Motif / Motivation",
+      "CONFIRMING...": "CONFIRMATION EN COURS...",
       "CONFIRM ATTENDANCE": "CONFIRMER LA PRÉSENCE",
       "Attendance Recorded!": "Présence enregistrée !",
       "Your registration for": "Votre inscription pour",
       "has been submitted successfully.": "a été soumise avec succès.",
-      "the workshop": "l'atelier"
+      "the workshop": "l'atelier",
+      "This workshop has ended": "Cet atelier est terminé",
+      "Sign-ins are now closed for this session. Thank you for your interest!": "Les inscriptions sont désormais fermées pour cette session. Merci de votre intérêt !"
     }
   },
   en: {
     translation: {
       "Algérie Télécom": "Algérie Télécom",
-      "Protected by Enterprise Security Policy • Algérie Télécom ©": "Protected by Enterprise Security Policy • Algérie Télécom ©",
       "Algérie Télécom • Presence Portal": "Algérie Télécom • Presence Portal",
       "Algérie Télécom • Training Portal": "Algérie Télécom • Training Portal",
-      
+      "Description": "Description",
+      "Attendance Register": "Attendance Register",
+      "Session Detail": "Session Detail",
+      "Login": "Login",
       "Sign in to manage training formations and registers": "Sign in to manage training formations and registers",
       "Email Address": "Email Address",
       "Password": "Password",
       "Authenticating...": "Authenticating...",
       "Sign In To Admin Portal": "Sign In To Admin Portal",
-      
       "Sign Out": "Sign Out",
-
+      "Dashboard": "Dashboard",
       "Formation & Workshop Management": "Formation & Workshop Management",
       "Manage all official corporate training sessions, monitor student sign-in registers, and export session data.": "Manage all official corporate training sessions, monitor student sign-in registers, and export session data.",
       "Active Workshops": "Active Workshops",
@@ -141,7 +136,7 @@ const resources = {
       "at": "at",
       "Error": "Error",
       "Add New Formation": "Add New Formation",
-      "Search by workshop title or trainer name...": "Search by workshop title or trainer name...",
+      "Search by workshop title or trainer name": "Search by workshop title or trainer name",
       "Workshops Available": "Workshops Available",
       "Workshop Available": "Workshop Available",
       "Loading session database...": "Loading session database...",
@@ -171,13 +166,9 @@ const resources = {
       "Cancel": "Cancel",
       "Saving...": "Saving...",
       "Create Workshop": "Create Workshop",
-      "e.g. Fiber Optic Technical Training": "e.g. Fiber Optic Technical Training",
-      "e.g. Karim Mansouri": "e.g. Karim Mansouri",
-      "e.g. Training Center Lab 01": "e.g. Training Center Lab 01",
       "Please select a valid date between 2024 and 2035.": "Please select a valid date between 2024 and 2035.",
       "Workshop hours must be scheduled between 07:00 AM and 07:00 PM.": "Workshop hours must be scheduled between 07:00 AM and 07:00 PM.",
       "Error creating workshop": "Error creating workshop",
-
       "Back to Dashboard": "Back to Dashboard",
       "Loading Session...": "Loading Session...",
       "Copy Link": "Copy Link",
@@ -187,9 +178,10 @@ const resources = {
       "Save QR": "Save QR",
       "Save Image": "Save Image",
       "Export PDF": "Export PDF",
+      "Export CSV": "Export CSV",
+      "Export CSV (.csv)": "Export CSV (.csv)",
       "List of Participants": "List of Participants",
-      "list of participants ::": "List of Participants ::",
-      "Search registered attendees...": "Search registered attendees...",
+      "Search registered attendees": "Search registered attendees",
       "Loading participant register...": "Loading participant register...",
       "No registered attendees found": "No registered attendees found",
       "Share the QR code or direct link with participants to collect signatures.": "Share the QR code or direct link with participants to collect signatures.",
@@ -204,42 +196,41 @@ const resources = {
       "Formation Name": "Formation Name",
       "Date": "Date",
       "Location": "Location",
-
       "Welcome to this Workshop": "Welcome to this Workshop",
       "Loading workshop details...": "Loading workshop details...",
       "Workshop Sign-In": "Workshop Sign-In",
       "Full Name *": "Full Name *",
       "Enter your full name": "Enter your full name",
       "Email Address *": "Email Address *",
-      "e.g. participant@example.com": "e.g. participant@example.com",
       "Phone Number": "Phone Number",
       "Status / Function": "Status / Function",
-      "e.g. Employee / Student": "e.g. Employee / Student",
       "Reason / Motivation": "Reason / Motivation",
-      "Brief description...": "Brief description...",
       "CONFIRMING...": "CONFIRMING...",
       "CONFIRM ATTENDANCE": "CONFIRM ATTENDANCE",
       "Attendance Recorded!": "Attendance Recorded!",
       "Your registration for": "Your registration for",
       "has been submitted successfully.": "has been submitted successfully.",
-      "the workshop": "the workshop"
+      "the workshop": "the workshop",
+      "This workshop has ended": "This workshop has ended",
+      "Sign-ins are now closed for this session. Thank you for your interest!": "Sign-ins are now closed for this session. Thank you for your interest!"
     }
   },
   ar: {
     translation: {
       "Algérie Télécom": "اتصالات الجزائر",
-      "Protected by Enterprise Security Policy • Algérie Télécom ©": "محمي بسياسة أمان الشركة • اتصالات الجزائر ©",
       "Algérie Télécom • Presence Portal": "اتصالات الجزائر • بوابة الحضور",
       "Algérie Télécom • Training Portal": "اتصالات الجزائر • بوابة التدريب",
-
+      "Description": "الوصف",
+      "Attendance Register": "سجل الحضور",
+      "Session Detail": "تفاصيل الجلسة",
+      "Login": "تسجيل الدخول",
       "Sign in to manage training formations and registers": "تسجيل الدخول لإدارة التكوينات وسجلات الحضور",
       "Email Address": "عنوان البريد الإلكتروني",
       "Password": "كلمة المرور",
       "Authenticating...": "جاري المصادقة...",
       "Sign In To Admin Portal": "تسجيل الدخول إلى بوابة الإدارة",
-      
       "Sign Out": "تسجيل الخروج",
-
+      "Dashboard": "لوحة القيادة",
       "Formation & Workshop Management": "إدارة الدورات التدريبية وورش العمل",
       "Manage all official corporate training sessions, monitor student sign-in registers, and export session data.": "إدارة جميع الدورات التدريبية الرسمية، ومراقبة سجلات الحضور، وتصدير البيانات.",
       "Active Workshops": "الورشات النشطة",
@@ -249,7 +240,7 @@ const resources = {
       "at": "على",
       "Error": "خطأ",
       "Add New Formation": "إضافة دورة جديدة",
-      "Search by workshop title or trainer name...": "البحث بعنوان الدورة أو اسم المدرب...",
+      "Search by workshop title or trainer name": "البحث بعنوان الدورة أو اسم المدرب",
       "Workshops Available": "ورشات متاحة",
       "Workshop Available": "ورشة متاحة",
       "Loading session database...": "جاري تحميل قاعدة بيانات الجلسات...",
@@ -279,13 +270,9 @@ const resources = {
       "Cancel": "إلغاء",
       "Saving...": "جاري الحفظ...",
       "Create Workshop": "إنشاء ورشة",
-      "e.g. Fiber Optic Technical Training": "مثال: تدريب تقني على الألياف البصرية",
-      "e.g. Karim Mansouri": "مثال: كريم منصوري",
-      "e.g. Training Center Lab 01": "مثال: مختبر مركز التدريب 01",
       "Please select a valid date between 2024 and 2035.": "يرجى تحديد تاريخ صالح بين عامي 2024 و2035.",
       "Workshop hours must be scheduled between 07:00 AM and 07:00 PM.": "يجب جدولة ساعات الورشة بين الساعة 07:00 صباحاً و07:00 مساءً.",
       "Error creating workshop": "خطأ أثناء إنشاء الورشة",
-
       "Back to Dashboard": "العودة إلى لوحة القيادة",
       "Loading Session...": "جاري تحميل الجلسة...",
       "Copy Link": "نسخ الرابط",
@@ -295,9 +282,10 @@ const resources = {
       "Save QR": "حفظ الرمز",
       "Save Image": "حفظ الصورة",
       "Export PDF": "تصدير بصيغة PDF",
+      "Export CSV": "تصدير بصيغة CSV",
+      "Export CSV (.csv)": "تصدير بصيغة CSV (.csv)",
       "List of Participants": "قائمة المشاركين",
-      "list of participants ::": "قائمة المشاركين ::",
-      "Search registered attendees...": "البحث في الحضور المسجلين...",
+      "Search registered attendees": "البحث في الحضور المسجلين",
       "Loading participant register...": "جاري تحميل سجل المشاركين...",
       "No registered attendees found": "لم يتم العثور على حضور مسجلين",
       "Share the QR code or direct link with participants to collect signatures.": "شارك رمز الاستجابة السريعة أو الرابط مع المشاركين.",
@@ -312,25 +300,23 @@ const resources = {
       "Formation Name": "اسم الدورة",
       "Date": "التاريخ",
       "Location": "المكان",
-
       "Welcome to this Workshop": "مرحباً بكم في هذه الورشة",
       "Loading workshop details...": "جاري تحميل تفاصيل الورشة...",
       "Workshop Sign-In": "تسجيل الدخول للورشة",
       "Full Name *": "الاسم الكامل *",
       "Enter your full name": "أدخل اسمك الكامل",
       "Email Address *": "البريد الإلكتروني *",
-      "e.g. participant@example.com": "مثال: participant@example.com",
       "Phone Number": "رقم الهاتف",
       "Status / Function": "الصفة / الوظيفة",
-      "e.g. Employee / Student": "مثال: موظف / طالب",
       "Reason / Motivation": "السبب / الدافع",
-      "Brief description...": "وصف موجز...",
       "CONFIRMING...": "جاري التأكيد...",
       "CONFIRM ATTENDANCE": "تأكيد الحضور",
       "Attendance Recorded!": "تم تسجيل الحضور!",
       "Your registration for": "لقد تم تسجيلك لـ",
       "has been submitted successfully.": "بنجاح.",
-      "the workshop": "الورشة"
+      "the workshop": "الورشة",
+      "This workshop has ended": "انتهت هذه الورشة",
+      "Sign-ins are now closed for this session. Thank you for your interest!": "باب التسجيل مغلق حالياً لهذه الجلسة. شكراً لاهتمامكم!"
     }
   }
 };
@@ -339,7 +325,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: "fr", // default language
+    lng: "fr",
     fallbackLng: "fr",
     interpolation: {
       escapeValue: false

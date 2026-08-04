@@ -19,10 +19,12 @@ import {
   QrCode,
   X,
   FileText,
+  FileSpreadsheet,
   Trash2,
   AlertTriangle,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Info
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -40,8 +42,7 @@ export default function SessionDetail() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Modals state
+
   const [showQRModal, setShowQRModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -53,6 +54,7 @@ export default function SessionDetail() {
   useEffect(() => {
     fetchSessionData();
   }, [id]);
+
   useEffect(() => {
     if (workshop?.title) {
       document.title = `${workshop.title} | Algérie Télécom`;
@@ -83,50 +85,81 @@ export default function SessionDetail() {
 
   const formatSessionDate = (dateStr, timeStr) => {
     if (!dateStr) return t('Date TBD');
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return t('Date TBD');
 
-    const lang = i18n.language || 'fr';
-
-    if (lang.startsWith('ar')) {
-      const dayName = d.toLocaleDateString('ar-DZ', { weekday: 'long' });
-      const dayNum = d.getDate();
-      const monthName = ALGERIAN_ARABIC_MONTHS[d.getMonth()];
-      const yearNum = d.getFullYear();
-
-      let formattedDate = `${dayName}، ${dayNum} ${monthName} ${yearNum}`;
-      if (timeStr) {
-        formattedDate += ` ${t('at')} ${timeStr}`;
+    let year, month, day;
+    if (typeof dateStr === 'string' && dateStr.includes('-')) {
+      const parts = dateStr.slice(0, 10).split('-');
+      if (parts[0].length === 4) {
+        [year, month, day] = parts.map(Number);
+      } else {
+        [day, month, year] = parts.map(Number);
       }
-      return formattedDate;
+    } else {
+      const parsedDate = new Date(dateStr);
+      if (isNaN(parsedDate.getTime())) return t('Date TBD');
+      year = parsedDate.getFullYear();
+      month = parsedDate.getMonth() + 1;
+      day = parsedDate.getDate();
     }
 
-    const formattedDate = d.toLocaleDateString(lang, {
+    const dateObj = new Date(year, month - 1, day);
+    const lang = i18n.language || 'fr';
+
+    let formattedDate = '';
+    if (lang.startsWith('ar')) {
+      const dayName = dateObj.toLocaleDateString('ar-DZ', { weekday: 'long' });
+      const monthName = ALGERIAN_ARABIC_MONTHS[month - 1];
+      formattedDate = `${dayName}، ${day} ${monthName} ${year}`;
+    } else {
+      formattedDate = dateObj.toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
+
+    return timeStr ? `${formattedDate} ${t('at')} ${timeStr}` : formattedDate;
+  };
+
+  const formatSessionDateFrench = (dateStr, timeStr) => {
+    if (!dateStr) return 'À déterminer';
+
+    let year, month, day;
+    if (typeof dateStr === 'string' && dateStr.includes('-')) {
+      const parts = dateStr.slice(0, 10).split('-');
+      if (parts[0].length === 4) {
+        [year, month, day] = parts.map(Number);
+      } else {
+        [day, month, year] = parts.map(Number);
+      }
+    } else {
+      const parsedDate = new Date(dateStr);
+      if (isNaN(parsedDate.getTime())) return 'À déterminer';
+      year = parsedDate.getFullYear();
+      month = parsedDate.getMonth() + 1;
+      day = parsedDate.getDate();
+    }
+
+    const dateObj = new Date(year, month - 1, day);
+    const formattedDate = dateObj.toLocaleDateString('fr-FR', {
       weekday: 'long',
       month: 'long',
       day: 'numeric',
       year: 'numeric',
     });
 
-    return timeStr ? `${formattedDate} ${t('at')} ${timeStr}` : formattedDate;
+    return timeStr ? `${formattedDate} à ${timeStr}` : formattedDate;
   };
 
-  // Status calculator with +2 Hours workshop duration buffer
   const isWorkshopEnded = (dateStr, timeStr) => {
     if (!dateStr) return false;
 
     try {
       let year, month, day;
 
-      if (dateStr.includes('-')) {
+      if (typeof dateStr === 'string' && dateStr.includes('-')) {
         const parts = dateStr.slice(0, 10).split('-');
-        if (parts[0].length === 4) {
-          [year, month, day] = parts.map(Number);
-        } else {
-          [day, month, year] = parts.map(Number);
-        }
-      } else if (dateStr.includes('/')) {
-        const parts = dateStr.slice(0, 10).split('/');
         if (parts[0].length === 4) {
           [year, month, day] = parts.map(Number);
         } else {
@@ -140,9 +173,7 @@ export default function SessionDetail() {
         day = parsedDate.getDate();
       }
 
-      let hours = 23;
-      let minutes = 59;
-      let seconds = 59;
+      let hours = 23, minutes = 59, seconds = 59;
 
       if (timeStr) {
         const timeMatch = timeStr.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
@@ -157,19 +188,16 @@ export default function SessionDetail() {
 
       if (isNaN(workshopStart.getTime())) return false;
 
-      // Add 2 hours buffer (2 hours * 60 mins * 60 secs * 1000 ms)
       const workshopEndTime = new Date(workshopStart.getTime() + (2 * 60 * 60 * 1000));
-
       return workshopEndTime < new Date();
     } catch (err) {
-      console.error('Error calculating workshop status:', err);
+      console.error('Erreur de calcul du statut de l\'atelier:', err);
       return false;
     }
   };
 
   const hasEnded = isWorkshopEnded(workshop?.date, workshop?.time);
 
-  // Delete Session Handler
   const confirmDeleteSession = async () => {
     setDeleting(true);
     setDeleteError('');
@@ -236,7 +264,7 @@ export default function SessionDetail() {
       const png = canvas.toDataURL('image/png');
       const downloadLink = document.createElement('a');
       downloadLink.href = png;
-      downloadLink.download = `workshop_${id}_qrcode.png`;
+      downloadLink.download = `atelier_${id}_qrcode.png`;
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
@@ -248,90 +276,90 @@ export default function SessionDetail() {
 
   const exportPDF = async () => {
     const doc = new jsPDF();
-    const primaryColor = [0, 45, 98];
-    const emeraldColor = [0, 168, 89];
-
-    doc.setFillColor(...primaryColor);
-    doc.rect(0, 0, 150, 4, 'F');
-    doc.setFillColor(...emeraldColor);
-    doc.rect(150, 0, 60, 4, 'F');
+    let startY = 15;
 
     const logoBase64 = await getLogoBase64();
     if (logoBase64) {
-      doc.addImage(logoBase64, 'PNG', 14, 10, 30, 12);
+      doc.addImage(logoBase64, 'PNG', 85, startY, 40, 16);
+      startY += 22;
     }
 
-    const titleX = logoBase64 ? 50 : 14;
     doc.setFont('Helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.setTextColor(...primaryColor);
-    doc.text('OFFICIAL ATTENDANCE REGISTER', titleX, 17);
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text('ALGÉRIE TÉLÉCOM • PORTAIL DE FORMATION', 105, startY, { align: 'center' });
+    
+    startY += 7;
+    doc.setFontSize(13);
+    doc.text('REGISTRE OFFICIEL DE PRÉSENCE', 105, startY, { align: 'center' });
 
-    doc.setFontSize(8.5);
-    doc.setFont('Helvetica', 'normal');
-    doc.setTextColor(100, 116, 139);
-    doc.text('ALGÉRIENNE DES TÉLÉCOMMUNICATIONS • FORMATION PORTAL', titleX, 23);
+    startY += 6;
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.line(14, startY, 196, startY);
 
-    doc.setDrawColor(226, 232, 240);
-    doc.line(14, 28, 196, 28);
-
+    startY += 8;
     doc.setFont('Helvetica', 'bold');
     doc.setFontSize(11);
-    doc.setTextColor(...primaryColor);
-    doc.text('WORKSHOP DETAILS', 14, 36);
+    doc.setTextColor(0, 0, 0);
+    doc.text('DÉTAILS DE LA FORMATION', 14, startY);
 
     doc.setFontSize(9.5);
     doc.setFont('Helvetica', 'normal');
-    doc.setTextColor(51, 65, 85);
 
-    doc.text(`• ${t("Formation Name")}: ${workshop?.title || 'N/A'}`, 14, 44);
-    doc.text(`• ${t("Trainer")}: ${workshop?.trainer_name || t('Unassigned')}`, 14, 50);
+    startY += 6;
+    doc.text(`• Nom de la formation: ${workshop?.title || 'N/A'}`, 14, startY);
+    startY += 6;
+    doc.text(`• Formateur: ${workshop?.trainer_name || 'Non assigné'}`, 14, startY);
+    startY += 6;
     
-    const lang = i18n.language || 'fr';
-    let formattedDate = 'N/A';
-    if (workshop?.date) {
-      const d = new Date(workshop.date);
-      if (!isNaN(d.getTime())) {
-        if (lang.startsWith('ar')) {
-          formattedDate = `${d.getDate()} ${ALGERIAN_ARABIC_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-        } else {
-          formattedDate = d.toLocaleDateString(lang, { year: 'numeric', month: 'long', day: 'numeric' });
-        }
-      }
+    const formattedDateFr = formatSessionDateFrench(workshop?.date, workshop?.time);
+    doc.text(`• Date: ${formattedDateFr}`, 14, startY);
+    startY += 6;
+    doc.text(`• Lieu: ${workshop?.location || 'N/A'}`, 14, startY);
+    startY += 6;
+
+    if (workshop?.description) {
+      const splitDesc = doc.splitTextToSize(`• Description: ${workshop.description}`, 180);
+      doc.text(splitDesc, 14, startY);
+      startY += (splitDesc.length * 5);
     }
 
-    doc.text(`• ${t("Date")}: ${formattedDate}${workshop?.time ? ` ${t("at")} ${workshop.time}` : ''}`, 14, 56);
-    doc.text(`• ${t("Location")}: ${workshop?.location || 'N/A'}`, 14, 62);
-
+    startY += 4;
     doc.setFont('Helvetica', 'bold');
     doc.setFontSize(11);
-    doc.setTextColor(...primaryColor);
-    doc.text('PARTICIPANT LIST', 14, 74);
+    doc.setTextColor(0, 0, 0);
+    doc.text('LISTE DES PARTICIPANTS', 14, startY);
 
     const tableRows = attendees.map((student, index) => [
       index + 1,
       student.full_name || 'N/A',
       student.email || 'N/A',
       student.phone || 'N/A',
-      student.status || t('Participant')
+      student.status || 'Participant'
     ]);
 
     autoTable(doc, {
-      startY: 78,
-      head: [['#', t('Full Name'), t('Email Address'), t('Phone'), t('Status / Role')]],
+      startY: startY + 4,
+      head: [['#', 'Nom Complet', 'Adresse e-mail', 'Téléphone', 'Statut / Rôle']],
       body: tableRows,
+      theme: 'grid',
       headStyles: {
-        fillColor: primaryColor,
-        textColor: [255, 255, 255],
+        fillColor: false,
+        textColor: [0, 0, 0],
         fontStyle: 'bold',
-        fontSize: 9
+        fontSize: 9,
+        lineWidth: 0.3,
+        lineColor: [0, 0, 0]
       },
       bodyStyles: {
         fontSize: 8.5,
-        textColor: [51, 65, 85]
+        textColor: [0, 0, 0],
+        lineWidth: 0.1,
+        lineColor: [0, 0, 0]
       },
       alternateRowStyles: {
-        fillColor: [248, 250, 252]
+        fillColor: false
       },
       margin: { left: 14, right: 14 }
     });
@@ -340,48 +368,109 @@ export default function SessionDetail() {
 
     doc.setFont('Helvetica', 'bold');
     doc.setFontSize(10);
-    doc.setTextColor(...emeraldColor);
-    doc.text(`${t("Total Attendees")}: ${attendees.length}`, 14, finalY);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Total des participants: ${attendees.length}`, 14, finalY);
 
-    finalY += 12;
-
+    finalY += 10;
     doc.setFont('Helvetica', 'bold');
     doc.setFontSize(11);
-    doc.setTextColor(...primaryColor);
-    doc.text('TRAINER REMARKS & OBSERVATIONS', 14, finalY);
+    doc.setTextColor(0, 0, 0);
+    doc.text('REMARQUES ET OBSERVATIONS DU FORMATEUR', 14, finalY);
 
-    doc.setDrawColor(226, 232, 240);
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.2);
     doc.setLineDashPattern([2, 2], 0);
     
-    finalY += 10;
+    finalY += 8;
     doc.line(14, finalY, 196, finalY);
-    finalY += 10;
+    finalY += 8;
     doc.line(14, finalY, 196, finalY);
-    finalY += 10;
+    finalY += 8;
     doc.line(14, finalY, 196, finalY);
 
     doc.setLineDashPattern([], 0);
 
-    finalY += 14;
-
+    finalY += 12;
     doc.setFont('Helvetica', 'bold');
     doc.setFontSize(11);
-    doc.setTextColor(...primaryColor);
-    doc.text('SIGNATURES & STAMPS', 14, finalY);
+    doc.setTextColor(0, 0, 0);
+    doc.text('SIGNATURES ET CACHETS', 14, finalY);
 
-    finalY += 8;
+    finalY += 6;
 
-    doc.setDrawColor(203, 213, 225);
     doc.rect(14, finalY, 85, 28);
     doc.setFontSize(8.5);
     doc.setFont('Helvetica', 'bold');
-    doc.setTextColor(100, 116, 139);
-    doc.text('Trainer Signature', 18, finalY + 6);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Signature du formateur', 18, finalY + 6);
 
     doc.rect(111, finalY, 85, 28);
-    doc.text('Director Signature & Stamp', 115, finalY + 6);
+    doc.text('Signature et cachet du directeur', 115, finalY + 6);
 
-    doc.save(`${workshop?.title || 'workshop'}_Official_Attendance_Register.pdf`);
+    doc.save(`${workshop?.title || 'atelier'}_Registre_Officiel_Presence.pdf`);
+  };
+
+  const exportCSV = () => {
+    if (!workshop) return;
+
+    // Use standard comma delimiter for English Excel compatibility
+    const DELIMITER = ',';
+
+    const escapeCSV = (val, isPhone = false) => {
+      if (val === null || val === undefined) return '""';
+      let str = String(val).replace(/[\r\n]+/g, ' ').trim();
+      // Excel text formula to preserve phone numbers (leading zeros, no scientific notation)
+      if (isPhone) return `="text"`.replace('text', str);
+      return `"${str.replace(/"/g, '""')}"`;
+    };
+
+    // Prepend UTF-8 BOM (\uFEFF) at index 0 for accent rendering
+    let csvContent = '\uFEFF';
+
+    // Header Metadata Block
+    csvContent += `${escapeCSV('ALGÉRIE TÉLÉCOM • REGISTRE DE PRÉSENCE')}${DELIMITER}${DELIMITER}${DELIMITER}${DELIMITER}${DELIMITER}\n`;
+    csvContent += `${escapeCSV('Nom de la formation:')}${DELIMITER}${escapeCSV(workshop.title || 'N/A')}${DELIMITER}${DELIMITER}${DELIMITER}${DELIMITER}\n`;
+    csvContent += `${escapeCSV('Formateur:')}${DELIMITER}${escapeCSV(workshop.trainer_name || 'Non assigné')}${DELIMITER}${DELIMITER}${DELIMITER}${DELIMITER}\n`;
+    csvContent += `${escapeCSV('Date:')}${DELIMITER}${escapeCSV(formatSessionDateFrench(workshop.date, workshop.time))}${DELIMITER}${DELIMITER}${DELIMITER}${DELIMITER}\n`;
+    csvContent += `${escapeCSV('Lieu:')}${DELIMITER}${escapeCSV(workshop.location || 'N/A')}${DELIMITER}${DELIMITER}${DELIMITER}${DELIMITER}\n`;
+    if (workshop.description) {
+      csvContent += `${escapeCSV('Description:')}${DELIMITER}${escapeCSV(workshop.description)}${DELIMITER}${DELIMITER}${DELIMITER}${DELIMITER}\n`;
+    }
+    csvContent += `${escapeCSV('Total des participants:')}${DELIMITER}${attendees.length}${DELIMITER}${DELIMITER}${DELIMITER}${DELIMITER}\n\n`;
+
+    // Table Headers
+    const headers = [
+      '#',
+      t("Full Name"),
+      t("Email Address"),
+      t("Phone"),
+      t("Status / Role"),
+      t("Reason")
+    ];
+    csvContent += headers.map(h => escapeCSV(h)).join(DELIMITER) + '\n';
+
+    // Attendance Table Rows
+    attendees.forEach((student, index) => {
+      const row = [
+        index + 1,
+        escapeCSV(student.full_name || 'N/A'),
+        escapeCSV(student.email || 'N/A'),
+        escapeCSV(student.phone || 'N/A', true),
+        escapeCSV(student.status || t('Participant')),
+        escapeCSV(student.reason || 'N/A')
+      ];
+      csvContent += row.join(DELIMITER) + '\n';
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const downloadLink = document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.setAttribute('download', `${workshop.title || 'atelier'}_Registre_Presence.csv`);
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    URL.revokeObjectURL(url);
   };
 
   const filteredAttendees = attendees.filter((a) => {
@@ -409,7 +498,6 @@ export default function SessionDetail() {
         </div>
 
         <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-200/80 shadow-xs flex flex-col items-center text-center space-y-5 relative overflow-hidden">
-          {/* WORKSHOP STATUS BADGE */}
           <div className="absolute top-6 right-6 rtl:right-auto rtl:left-6">
             {hasEnded ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
@@ -432,22 +520,36 @@ export default function SessionDetail() {
             {workshop?.title || t('Loading Session...')}
           </h1>
 
-          <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
-            <User size={16} className="text-emerald-600 shrink-0" />
-            <span>{t("Trainer")}: <strong className="text-slate-900">{workshop?.trainer_name || t('Unassigned')}</strong></span>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50 px-3.5 py-1.5 rounded-xl border border-slate-100">
+              <User size={16} className="text-emerald-600 shrink-0" />
+              <span>{t("Trainer")}: <strong className="text-slate-900">{workshop?.trainer_name || t('Unassigned')}</strong></span>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600 bg-slate-50 px-3.5 py-1.5 rounded-xl border border-slate-100">
+              <Calendar size={16} className="text-emerald-600 shrink-0" />
+              <span>{formatSessionDate(workshop?.date, workshop?.time)}</span>
+            </div>
+
+            {workshop?.location && (
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600 bg-slate-50 px-3.5 py-1.5 rounded-xl border border-slate-100">
+                <MapPin size={16} className="text-emerald-600 shrink-0" />
+                <span>{workshop.location}</span>
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-slate-600">
-            <Calendar size={16} className="text-emerald-600 shrink-0" />
-            <span>{formatSessionDate(workshop?.date, workshop?.time)}</span>
-          </div>
+          {workshop?.description && (
+            <div className="w-full max-w-2xl bg-slate-50/80 border border-slate-200/80 rounded-2xl p-4 text-xs sm:text-sm text-slate-600 text-left rtl:text-right leading-relaxed flex items-start gap-3">
+              <Info size={18} className="text-emerald-600 shrink-0 mt-0.5" />
+              <div className="space-y-1 w-full">
+                <span className="font-bold text-slate-800 block">{t("Description")}:</span>
+                <p className="whitespace-pre-line text-slate-600 leading-relaxed">{workshop.description}</p>
+              </div>
+            </div>
+          )}
 
-          <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-slate-600">
-            <MapPin size={16} className="text-emerald-600 shrink-0" />
-            <span>{workshop?.location || t('Location TBD')}</span>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-2.5 pt-4 border-t border-slate-100 w-full max-w-lg">
+          <div className="flex flex-wrap items-center justify-center gap-2.5 pt-4 border-t border-slate-100 w-full max-w-2xl">
             <button
               onClick={copyDirectLink}
               className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-xl text-xs transition-all border border-slate-200 cursor-pointer"
@@ -482,6 +584,15 @@ export default function SessionDetail() {
             >
               <FileText size={14} />
               <span>{t("Export PDF")}</span>
+            </button>
+
+            <button
+              onClick={exportCSV}
+              className="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-sm cursor-pointer"
+              title={t("Export CSV")}
+            >
+              <FileSpreadsheet size={14} />
+              <span>{t("Export CSV (.csv)")}</span>
             </button>
 
             <button
@@ -521,7 +632,7 @@ export default function SessionDetail() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder={t("Search registered attendees...")}
+                  placeholder="......................"
                   className="w-full pl-9 rtl:pl-4 rtl:pr-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all shadow-2xs"
                 />
               </div>
@@ -588,7 +699,6 @@ export default function SessionDetail() {
         </div>
       </div>
 
-      {/* POPUP: QR Code Overlay Modal */}
       {showQRModal && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl max-w-sm w-full shadow-2xl overflow-hidden text-center relative border border-slate-200/80">
@@ -645,7 +755,6 @@ export default function SessionDetail() {
         </div>
       )}
 
-      {/* POPUP: Custom Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl max-w-sm w-full shadow-2xl p-6 border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95 duration-150">

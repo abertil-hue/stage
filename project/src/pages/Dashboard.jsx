@@ -33,22 +33,20 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
 
-  // Filter States
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'upcoming' | 'ended'
-  const [dateFilter, setDateFilter] = useState(''); // 'YYYY-MM-DD'
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('');
 
-  // Create Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [trainerName, setTrainerName] = useState('');
   const [location, setLocation] = useState('');
+  const [description, setDescription] = useState('');
   const [creating, setCreating] = useState(false);
   const [modalError, setModalError] = useState('');
 
-  // Delete Confirmation Modal State
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
@@ -56,6 +54,7 @@ export default function Dashboard() {
   useEffect(() => {
     fetchFormations();
   }, []);
+
   useEffect(() => {
     document.title = `${t("Dashboard")} | Algérie Télécom`;
   }, [i18n.language, t]);
@@ -70,20 +69,19 @@ export default function Dashboard() {
         .order('id', { ascending: false });
 
       if (error) {
-        console.error('Error fetching formations:', error);
+        console.error('Erreur de récupération des formations:', error);
         setFetchError(error.message);
       } else {
         setFormations(data || []);
       }
     } catch (err) {
-      console.error('Unexpected error:', err);
+      console.error('Erreur inattendue:', err);
       setFetchError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Status calculator with +2 Hours workshop duration buffer
   const isWorkshopEnded = (dateStr, timeStr) => {
     if (!dateStr) return false;
 
@@ -129,22 +127,19 @@ export default function Dashboard() {
 
       if (isNaN(workshopStart.getTime())) return false;
 
-      // Add 2 hours buffer
       const workshopEndTime = new Date(workshopStart.getTime() + (2 * 60 * 60 * 1000));
 
       return workshopEndTime < new Date();
     } catch (err) {
-      console.error('Error calculating workshop status:', err);
+      console.error('Erreur de calcul du statut:', err);
       return false;
     }
   };
 
-  // Summary Metrics
   const totalCount = formations.length;
   const endedCount = formations.filter((f) => isWorkshopEnded(f.date, f.time)).length;
   const upcomingCount = totalCount - endedCount;
 
-  // Execute Deletion
   const confirmDeleteFormation = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -203,6 +198,7 @@ export default function Dashboard() {
           time,
           trainer_name: trainerName,
           location,
+          description,
           trainer_id: user?.id || null,
         },
       ]);
@@ -213,6 +209,7 @@ export default function Dashboard() {
         setTime('');
         setTrainerName('');
         setLocation('');
+        setDescription('');
         setModalError('');
         setShowCreateModal(false);
         fetchFormations();
@@ -240,30 +237,27 @@ export default function Dashboard() {
       return `${dayNum} ${monthName} ${yearNum}`;
     }
 
-    return parsed.toLocaleDateString(lang, {
+    return parsed.toLocaleDateString('fr-FR', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
     });
   };
 
-  // Combined Filtering Logic
   const filteredFormations = formations.filter((f) => {
-    // 1. Search Query Match
     const term = searchTerm.toLowerCase().trim();
     const matchesSearch =
       !term ||
       f.title?.toLowerCase().includes(term) ||
-      f.trainer_name?.toLowerCase().includes(term);
+      f.trainer_name?.toLowerCase().includes(term) ||
+      f.description?.toLowerCase().includes(term);
 
-    // 2. Status Filter Match
     const hasEnded = isWorkshopEnded(f.date, f.time);
     const matchesStatus =
       statusFilter === 'all' ||
       (statusFilter === 'ended' && hasEnded) ||
       (statusFilter === 'upcoming' && !hasEnded);
 
-    // 3. Date Filter Match
     let matchesDate = true;
     if (dateFilter) {
       if (!f.date) {
@@ -290,12 +284,11 @@ export default function Dashboard() {
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
-        {/* HERO BANNER WITH STATS */}
         <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs flex flex-col lg:flex-row items-center justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left rtl:sm:text-right">
             <img 
               src={logo} 
-              alt="Algérie Télécom Logo" 
+              alt="Logo Algérie Télécom" 
               className="h-16 sm:h-20 w-auto object-contain shrink-0"
             />
             <div className="space-y-1">
@@ -327,6 +320,12 @@ export default function Dashboard() {
             <button
               onClick={() => {
                 setModalError('');
+                setTitle('');
+                setDate('');
+                setTime('');
+                setTrainerName('');
+                setLocation('');
+                setDescription('');
                 setShowCreateModal(true);
               }}
               className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold px-4 py-2 rounded-xl text-xs transition-all shadow-xs hover:shadow-md cursor-pointer ml-1"
@@ -337,18 +336,16 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* SEARCH & FILTER BAR */}
         <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
           <div className="flex flex-col md:flex-row items-center gap-3">
             
-            {/* Search Input */}
             <div className="relative flex-1 w-full">
               <Search size={18} className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder={t("Search by workshop title or trainer name...")}
+                placeholder={t("Search by workshop title or trainer name")}
                 className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-10 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-600/20 transition-all text-slate-800 placeholder-slate-400"
               />
               {searchTerm && (
@@ -361,7 +358,6 @@ export default function Dashboard() {
               )}
             </div>
 
-            {/* Status Filter Chips */}
             <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-full md:w-auto justify-center">
               <button
                 type="button"
@@ -398,7 +394,6 @@ export default function Dashboard() {
               </button>
             </div>
 
-            {/* Date Filter */}
             <div className="relative w-full md:w-auto shrink-0">
               <input
                 type="date"
@@ -416,7 +411,6 @@ export default function Dashboard() {
               )}
             </div>
 
-            {/* Clear Filters Button */}
             {isAnyFilterActive && (
               <button
                 onClick={clearAllFilters}
@@ -426,7 +420,6 @@ export default function Dashboard() {
               </button>
             )}
 
-            {/* Results Count Badge */}
             <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-3.5 py-2 rounded-xl border border-slate-200 whitespace-nowrap hidden lg:inline-block shrink-0">
               {filteredFormations.length} {filteredFormations.length === 1 ? t('Workshop Available') : t('Workshops Available')}
             </span>
@@ -505,6 +498,12 @@ export default function Dashboard() {
                       </span>
                     </div>
 
+                    {item.description && (
+                      <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 bg-slate-50/80 p-2.5 rounded-xl border border-slate-100">
+                        {item.description}
+                      </p>
+                    )}
+
                     <div className="h-px w-full bg-slate-100" />
 
                     <div className="space-y-2.5 text-xs text-slate-600">
@@ -566,7 +565,6 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* CREATE MODAL */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden relative border border-slate-200 my-auto">
@@ -600,8 +598,21 @@ export default function Dashboard() {
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder={t("e.g. Fiber Optic Technical Training")}
+                  placeholder="......................"
                   className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 bg-slate-50 text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  {t("Description")}
+                </label>
+                <textarea
+                  rows={3}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="......................"
+                  className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 bg-slate-50 text-slate-900 resize-none"
                 />
               </div>
 
@@ -613,7 +624,7 @@ export default function Dashboard() {
                   type="text"
                   value={trainerName}
                   onChange={(e) => setTrainerName(e.target.value)}
-                  placeholder={t("e.g. Karim Mansouri")}
+                  placeholder="......................"
                   className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 bg-slate-50 text-slate-900"
                 />
               </div>
@@ -656,7 +667,7 @@ export default function Dashboard() {
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder={t("e.g. Training Center Lab 01")}
+                  placeholder="......................"
                   className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 bg-slate-50 text-slate-900"
                 />
               </div>
@@ -682,7 +693,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* DELETE CONFIRMATION MODAL */}
       {deleteTarget && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl max-w-sm w-full shadow-2xl p-6 border border-slate-200 text-center space-y-4 animate-in fade-in zoom-in-95 duration-150">

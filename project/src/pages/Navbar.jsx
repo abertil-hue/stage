@@ -1,4 +1,3 @@
-// src/components/Navbar.jsx
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../config/supabaseClient';
 import { LogOut, Globe, ChevronDown } from 'lucide-react';
@@ -9,9 +8,8 @@ export default function Navbar() {
   const [currentLang, setCurrentLang] = useState('FR');
   const [showLangDropdown, setShowLangDropdown] = useState(false);
 
-  // Initialize lang on load based on i18n state
   useEffect(() => {
-    const langCode = i18n.language.toUpperCase();
+    const langCode = i18n.language ? i18n.language.toUpperCase() : 'FR';
     setCurrentLang(langCode);
     document.documentElement.dir = langCode === 'AR' ? 'rtl' : 'ltr';
   }, [i18n.language]);
@@ -45,7 +43,6 @@ export default function Navbar() {
           </div>
           <div className="flex items-center gap-3">
             
-            {/* Language Selector Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setShowLangDropdown(!showLangDropdown)}
@@ -74,10 +71,8 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Vertical Separator */}
             <div className="h-5 w-px bg-slate-200" />
 
-            {/* Sign Out Button */}
             <button
               onClick={handleSignOut}
               className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-red-600 bg-slate-50 hover:bg-red-50 border border-slate-200 hover:border-red-200 px-3.5 py-1.5 rounded-xl transition-all"

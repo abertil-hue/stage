@@ -30,25 +30,16 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public Attendance Form */}
         <Route path="/attend/:id" element={<Attend />} />
-
-        {/* Login Page */}
         <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <Login />} />
-
-        {/* PROTECTED DASHBOARD */}
         <Route 
           path="/dashboard" 
           element={session ? <Dashboard /> : <Navigate to="/login" replace />} 
         />
-
-        {/* PROTECTED SESSION DETAIL */}
         <Route 
           path="/session/:id" 
           element={session ? <SessionDetail /> : <Navigate to="/login" replace />} 
         />
-
-        {/* Default Fallback */}
         <Route path="*" element={<Navigate to={session ? "/dashboard" : "/login"} replace />} />
       </Routes>
     </BrowserRouter>

@@ -13,24 +13,30 @@ import {
   Sparkles, 
   AlertCircle,
   Loader2,
-  Calendar
+  Calendar,
+  MapPin,
+  Info,
+  Clock
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+const ALGERIAN_ARABIC_MONTHS = [
+  'جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان',
+  'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+];
+
 export default function Attend() {
-  const { t, i18n } = useTranslation(); // Destructured i18n here
+  const { t, i18n } = useTranslation();
   const { id } = useParams();
   const [workshop, setWorkshop] = useState(null);
   const [loadingWorkshop, setLoadingWorkshop] = useState(true);
 
-  // Form Fields
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [status, setStatus] = useState('');
   const [reason, setReason] = useState('');
 
-  // UI States
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -41,7 +47,6 @@ export default function Attend() {
     }
   }, [id]);
 
-  // Dynamic Browser Tab Title Hook
   useEffect(() => {
     if (workshop?.title) {
       document.title = `${workshop.title} - ${t("Attendance Register")} | Algérie Télécom`;
@@ -64,19 +69,91 @@ export default function Attend() {
     setLoadingWorkshop(false);
   };
 
+  const checkIsEnded = () => {
+    if (!workshop) return false;
+
+    const statusStr = String(workshop.status || '').toLowerCase().trim();
+    if (['ended', 'terminé', 'termine', 'closed', 'completed', 'finished', 'منتهية', 'منتهي'].includes(statusStr)) {
+      return true;
+    }
+
+    if (workshop.date) {
+      try {
+        const rawDate = typeof workshop.date === 'string' ? workshop.date.slice(0, 10) : '';
+        if (rawDate) {
+          const timeStr = workshop.time ? workshop.time : '23:59:59';
+          const sessionDateTime = new Date(`${rawDate}T${timeStr}`);
+          if (!isNaN(sessionDateTime.getTime()) && sessionDateTime < new Date()) {
+            return true;
+          }
+        }
+      } catch (err) {
+        console.error('Erreur d\'évaluation de la date:', err);
+      }
+    }
+
+    return false;
+  };
+
+  const isEnded = checkIsEnded();
+
+  const formatSessionDate = (dateStr, timeStr) => {
+    if (!dateStr) return '';
+
+    let year, month, day;
+    if (typeof dateStr === 'string' && dateStr.includes('-')) {
+      const parts = dateStr.slice(0, 10).split('-');
+      if (parts[0].length === 4) {
+        [year, month, day] = parts.map(Number);
+      } else {
+        [day, month, year] = parts.map(Number);
+      }
+    } else {
+      const parsedDate = new Date(dateStr);
+      if (isNaN(parsedDate.getTime())) return '';
+      year = parsedDate.getFullYear();
+      month = parsedDate.getMonth() + 1;
+      day = parsedDate.getDate();
+    }
+
+    const dateObj = new Date(year, month - 1, day);
+    const lang = i18n.language || 'fr';
+
+    let formattedDate = '';
+    if (lang.startsWith('ar')) {
+      const dayName = dateObj.toLocaleDateString('ar-DZ', { weekday: 'long' });
+      const monthName = ALGERIAN_ARABIC_MONTHS[month - 1];
+      formattedDate = `${dayName}، ${day} ${monthName} ${year}`;
+    } else {
+      formattedDate = dateObj.toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      });
+    }
+
+    return timeStr ? `${formattedDate} ${t("at")} ${timeStr}` : formattedDate;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isEnded) {
+      setErrorMsg(t("Sign-ins are now closed for this session. Thank you for your interest!"));
+      return;
+    }
+
     setSubmitting(true);
     setErrorMsg('');
 
     const { error } = await supabase.from('presences').insert([
       {
         formation_id: id,
-        full_name: fullName,
-        email: email,
-        phone: phone,
-        status: status,
-        reason: reason,
+        full_name: fullName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        status: status.trim(),
+        reason: reason.trim(),
       },
     ]);
 
@@ -111,15 +188,57 @@ export default function Attend() {
     );
   }
 
+  if (!loadingWorkshop && isEnded) {
+    return (
+      <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12 flex flex-col justify-center items-center p-4 relative">
+        <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-20">
+          <LanguageSelector />
+        </div>
+
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200/80 p-8 text-center space-y-4">
+          <div className="flex justify-center mb-1">
+            <img 
+              src={logo} 
+              alt="Algérie Télécom" 
+              className="h-20 w-auto object-contain"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <h2 className="text-lg font-extrabold text-slate-900 capitalize">
+              {workshop?.title}
+            </h2>
+            {workshop?.date && (
+              <p className="text-xs text-slate-500 font-medium capitalize">
+                {formatSessionDate(workshop.date, workshop.time)}
+              </p>
+            )}
+          </div>
+
+          <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto pt-0.5">
+            <Clock size={32} />
+          </div>
+
+          <div className="space-y-1.5">
+            <h1 className="text-xl font-extrabold text-slate-900">
+              {t("This workshop has ended")}
+            </h1>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              {t("Sign-ins are now closed for this session. Thank you for your interest!")}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12 flex flex-col justify-center items-center p-4 relative">
-      {/* Floating Top Right Language Selector */}
       <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-20">
         <LanguageSelector />
       </div>
 
       <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200/80">
-        {/* Header Section */}
         <div className="p-6 text-center space-y-3">
           <div className="flex justify-center mb-5">
             <img 
@@ -139,12 +258,12 @@ export default function Attend() {
               <span>{t("Loading workshop details...")}</span>
             </div>
           ) : (
-            <div className="space-y-1.5 pt-1">
+            <div className="space-y-3 pt-1">
               <h1 className="text-xl font-extrabold text-slate-900 capitalize tracking-tight">
                 {workshop?.title || t('Workshop Sign-In')}
               </h1>
               
-              <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs font-semibold text-slate-600 pt-1">
+              <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs font-semibold text-slate-600">
                 {workshop?.trainer_name && (
                   <span className="flex items-center gap-1 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 text-slate-700">
                     <User size={13} className="text-emerald-600 shrink-0" />
@@ -152,27 +271,33 @@ export default function Attend() {
                   </span>
                 )}
                 {workshop?.date && (
-  <span className="flex items-center gap-1 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 text-slate-700 capitalize">
-    <Calendar size={13} className="text-emerald-600 shrink-0" />
-    <span>
-      {/* Include the day of the week along with the date */}
-      {new Date(workshop.date).toLocaleDateString(i18n.language, {
-        weekday: 'long',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      })}
-      {workshop?.time ? ` ${t("at")} ${workshop.time}` : ''}
-    </span>
-  </span>
-)}
+                  <span className="flex items-center gap-1 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 text-slate-700 capitalize">
+                    <Calendar size={13} className="text-emerald-600 shrink-0" />
+                    <span>{formatSessionDate(workshop.date, workshop.time)}</span>
+                  </span>
+                )}
+                {workshop?.location && (
+                  <span className="flex items-center gap-1 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 text-slate-700">
+                    <MapPin size={13} className="text-emerald-600 shrink-0" />
+                    <span>{workshop.location}</span>
+                  </span>
+                )}
               </div>
+
+              {workshop?.description && (
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 text-xs text-slate-600 text-left rtl:text-right leading-relaxed flex items-start gap-2.5">
+                  <Info size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold text-slate-800 block mb-0.5">{t("Description")}:</span>
+                    <p className="whitespace-pre-line">{workshop.description}</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 pt-2 space-y-4">
           {errorMsg && (
             <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2.5">
               <AlertCircle size={16} className="flex-shrink-0 text-red-600" />
@@ -191,7 +316,7 @@ export default function Attend() {
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder={t("Enter your full name")}
+                placeholder="......................"
                 className="w-full pl-10 rtl:pl-3.5 rtl:pr-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
               />
             </div>
@@ -208,7 +333,7 @@ export default function Attend() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={t("e.g. participant@example.com")}
+                placeholder="......................"
                 className="w-full pl-10 rtl:pl-3.5 rtl:pr-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
               />
             </div>
@@ -224,7 +349,7 @@ export default function Attend() {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="0600 00 00 00"
+                placeholder="......................"
                 className="w-full pl-10 rtl:pl-3.5 rtl:pr-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
               />
             </div>
@@ -240,7 +365,7 @@ export default function Attend() {
                 type="text"
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                placeholder={t("e.g. Employee / Student")}
+                placeholder="......................"
                 className="w-full pl-10 rtl:pl-3.5 rtl:pr-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
               />
             </div>
@@ -256,7 +381,7 @@ export default function Attend() {
                 rows={3}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder={t("Brief description...")}
+                placeholder="......................"
                 className="w-full pl-10 rtl:pl-3.5 rtl:pr-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
               />
             </div>
@@ -265,7 +390,7 @@ export default function Attend() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full mt-2 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all shadow-md shadow-emerald-900/10 flex items-center justify-center gap-2"
+            className="w-full mt-2 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl text-xs transition-all shadow-md shadow-emerald-900/10 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
           >
             {submitting ? (
               <>
@@ -276,12 +401,6 @@ export default function Attend() {
               <span>{t("CONFIRM ATTENDANCE")}</span>
             )}
           </button>
-
-          <div className="text-center pt-2">
-            <p className="text-[11px] text-slate-400">
-              {t("Protected by Enterprise Security Policy • Algérie Télécom ©")}
-            </p>
-          </div>
         </form>
       </div>
     </div>

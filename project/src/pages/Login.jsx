@@ -1,13 +1,12 @@
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabaseClient';
 import logo from '../logo/logo.svg';
 import LanguageSelector from './LanguageSelector';
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import React, { useState, useEffect } from 'react';
 
 export default function Login() {
-  // 1. Get both `t` and `i18n` at the top level
   const { t, i18n } = useTranslation(); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,7 +14,6 @@ export default function Login() {
   const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
 
-  // 2. Place useEffect at the top level (outside handleLogin)
   useEffect(() => {
     document.title = `${t("Login")} | Algérie Télécom`;
   }, [i18n.language, t]);
@@ -40,17 +38,14 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-slate-100 font-sans text-slate-800 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Language Switcher Floating Header */}
       <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-20">
         <LanguageSelector />
       </div>
 
-      {/* Background Decorative Glows */}
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-blue-900/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200/80 relative z-10">
-        {/* Card Header */}
         <div className="p-8 text-black text-center relative">
           <div className="flex justify-center mb-4">
             <div className="p-2">
@@ -61,7 +56,6 @@ export default function Login() {
           <p className="text-xs text-emerald-600 mt-2 font-medium">{t("Sign in to manage training formations and registers")}</p>
         </div>
 
-        {/* Form Body */}
         <form onSubmit={handleLogin} className="p-8 space-y-5 pt-0">
           {errorMsg && (
             <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2.5">
@@ -81,7 +75,7 @@ export default function Login() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@algerietelecom.dz"
+                placeholder="......................"
                 className="w-full pl-10 rtl:pl-4 rtl:pr-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-700 focus:bg-white focus:ring-2 focus:ring-blue-700/20 transition-all"
               />
             </div>
@@ -121,12 +115,6 @@ export default function Login() {
               </>
             )}
           </button>
-
-          <div className="text-center pt-2">
-            <p className="text-[11px] text-slate-400">
-              {t("Protected by Enterprise Security Policy • Algérie Télécom ©")}
-            </p>
-          </div>
         </form>
       </div>
     </div>
