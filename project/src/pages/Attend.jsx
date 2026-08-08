@@ -21,7 +21,7 @@ import {
 import { useTranslation } from 'react-i18next';
 
 // ⚠️ REPLACE THIS WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
-const GOOGLE_SHEETS_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
+const GOOGLE_SHEETS_SCRIPT_URL = 'https://script.google.com/macros/library/d/1LqFHptiLTHYULa9ZLRf8uN9ZMYnvIUBZQhl7CXJf2p17iXhCXK3xqtVN/3';
 
 const ALGERIAN_ARABIC_MONTHS = [
   'جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان',
