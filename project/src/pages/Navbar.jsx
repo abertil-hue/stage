@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../config/supabaseClient';
 import { LogOut, Globe, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import logo from '../logo/logo.svg';
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
@@ -37,9 +38,11 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
-            <span className="text-lg sm:text-xl font-extrabold tracking-tight bg-emerald-600 bg-clip-text text-transparent">
-              {t("Algérie Télécom")}
-            </span>
+            <img 
+                          src={logo} 
+                          alt="Logo Algérie Télécom" 
+                          className="size-10 w-auto object-contain shrink-0"
+                        />
           </div>
           <div className="flex items-center gap-3">
             

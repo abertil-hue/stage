@@ -19,7 +19,6 @@ import {
   QrCode,
   X,
   FileText,
-  FileSpreadsheet,
   Trash2,
   AlertTriangle,
   Clock,
@@ -203,8 +202,10 @@ export default function SessionDetail() {
     setDeleteError('');
 
     try {
-      await supabase.from('presences').delete().eq('formation_id', id);
-      const { error } = await supabase.from('formations').delete().eq('id', id);
+      const { error } = await supabase
+        .from('formations')
+        .update({ is_active: false })
+        .eq('id', id);
 
       if (error) {
         setDeleteError(error.message);
@@ -410,69 +411,6 @@ export default function SessionDetail() {
     doc.save(`${workshop?.title || 'atelier'}_Registre_Officiel_Presence.pdf`);
   };
 
-  const exportCSV = () => {
-    if (!workshop) return;
-
-    // Use standard comma delimiter for English Excel compatibility
-    const DELIMITER = ',';
-
-    const escapeCSV = (val, isPhone = false) => {
-      if (val === null || val === undefined) return '""';
-      let str = String(val).replace(/[\r\n]+/g, ' ').trim();
-      // Excel text formula to preserve phone numbers (leading zeros, no scientific notation)
-      if (isPhone) return `="text"`.replace('text', str);
-      return `"${str.replace(/"/g, '""')}"`;
-    };
-
-    // Prepend UTF-8 BOM (\uFEFF) at index 0 for accent rendering
-    let csvContent = '\uFEFF';
-
-    // Header Metadata Block
-    csvContent += `${escapeCSV('ALGÉRIE TÉLÉCOM • REGISTRE DE PRÉSENCE')}${DELIMITER}${DELIMITER}${DELIMITER}${DELIMITER}${DELIMITER}\n`;
-    csvContent += `${escapeCSV('Nom de la formation:')}${DELIMITER}${escapeCSV(workshop.title || 'N/A')}${DELIMITER}${DELIMITER}${DELIMITER}${DELIMITER}\n`;
-    csvContent += `${escapeCSV('Formateur:')}${DELIMITER}${escapeCSV(workshop.trainer_name || 'Non assigné')}${DELIMITER}${DELIMITER}${DELIMITER}${DELIMITER}\n`;
-    csvContent += `${escapeCSV('Date:')}${DELIMITER}${escapeCSV(formatSessionDateFrench(workshop.date, workshop.time))}${DELIMITER}${DELIMITER}${DELIMITER}${DELIMITER}\n`;
-    csvContent += `${escapeCSV('Lieu:')}${DELIMITER}${escapeCSV(workshop.location || 'N/A')}${DELIMITER}${DELIMITER}${DELIMITER}${DELIMITER}\n`;
-    if (workshop.description) {
-      csvContent += `${escapeCSV('Description:')}${DELIMITER}${escapeCSV(workshop.description)}${DELIMITER}${DELIMITER}${DELIMITER}${DELIMITER}\n`;
-    }
-    csvContent += `${escapeCSV('Total des participants:')}${DELIMITER}${attendees.length}${DELIMITER}${DELIMITER}${DELIMITER}${DELIMITER}\n\n`;
-
-    // Table Headers
-    const headers = [
-      '#',
-      t("Full Name"),
-      t("Email Address"),
-      t("Phone"),
-      t("Status / Role"),
-      t("Reason")
-    ];
-    csvContent += headers.map(h => escapeCSV(h)).join(DELIMITER) + '\n';
-
-    // Attendance Table Rows
-    attendees.forEach((student, index) => {
-      const row = [
-        index + 1,
-        escapeCSV(student.full_name || 'N/A'),
-        escapeCSV(student.email || 'N/A'),
-        escapeCSV(student.phone || 'N/A', true),
-        escapeCSV(student.status || t('Participant')),
-        escapeCSV(student.reason || 'N/A')
-      ];
-      csvContent += row.join(DELIMITER) + '\n';
-    });
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const downloadLink = document.createElement('a');
-    downloadLink.href = url;
-    downloadLink.setAttribute('download', `${workshop.title || 'atelier'}_Registre_Presence.csv`);
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-    URL.revokeObjectURL(url);
-  };
-
   const filteredAttendees = attendees.filter((a) => {
     const term = searchTerm.toLowerCase().trim();
     if (!term) return true;
@@ -584,15 +522,6 @@ export default function SessionDetail() {
             >
               <FileText size={14} />
               <span>{t("Export PDF")}</span>
-            </button>
-
-            <button
-              onClick={exportCSV}
-              className="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-sm cursor-pointer"
-              title={t("Export CSV")}
-            >
-              <FileSpreadsheet size={14} />
-              <span>{t("Export CSV (.csv)")}</span>
             </button>
 
             <button
@@ -746,10 +675,6 @@ export default function SessionDetail() {
                   <span>{t("Save Image")}</span>
                 </button>
               </div>
-            </div>
-
-            <div className="p-3 bg-slate-50 border-t border-slate-100">
-              <p className="text-[10px] text-slate-400 font-medium">{t("Algérie Télécom • Presence Portal")}</p>
             </div>
           </div>
         </div>

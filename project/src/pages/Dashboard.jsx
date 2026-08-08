@@ -18,7 +18,8 @@ import {
   Trash2,
   AlertTriangle,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  FileSpreadsheet
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -66,6 +67,7 @@ export default function Dashboard() {
       const { data, error } = await supabase
         .from('formations')
         .select('*, presences(id)')
+        .neq('is_active', false)
         .order('id', { ascending: false });
 
       if (error) {
@@ -146,11 +148,9 @@ export default function Dashboard() {
     setDeleteError('');
 
     try {
-      await supabase.from('presences').delete().eq('formation_id', deleteTarget.id);
-
       const { error } = await supabase
         .from('formations')
-        .delete()
+        .update({ is_active: false })
         .eq('id', deleteTarget.id);
 
       if (error) {
@@ -200,6 +200,7 @@ export default function Dashboard() {
           location,
           description,
           trainer_id: user?.id || null,
+          is_active: true,
         },
       ]);
 
@@ -316,6 +317,16 @@ export default function Dashboard() {
               <CheckCircle2 size={14} className="text-slate-500" />
               <span>{t("Ended")}: <strong className="text-slate-800">{endedCount}</strong></span>
             </div>
+            <a
+              href="https://docs.google.com/spreadsheets/d/1tgTz4Z9GHGPs_E8MyzmcENCb82wItINFNupCeUn86iY/edit?gid=1526140983#gid=1526140983"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold px-4 py-2 rounded-xl text-xs transition-all shadow-xs hover:shadow-md cursor-pointer no-underline ml-1"
+              title="Google Sheets"
+            >
+              <FileSpreadsheet size={16} />
+              <span>Google Sheets</span>
+            </a>
 
             <button
               onClick={() => {
