@@ -20,6 +20,9 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+// ⚠️ REPLACE THIS WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
+const GOOGLE_SHEETS_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
+
 const ALGERIAN_ARABIC_MONTHS = [
   'جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان',
   'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
@@ -146,6 +149,7 @@ export default function Attend() {
     setSubmitting(true);
     setErrorMsg('');
 
+    // 1. Insert into Supabase
     const { error } = await supabase.from('presences').insert([
       {
         formation_id: id,
@@ -160,6 +164,31 @@ export default function Attend() {
     if (error) {
       setErrorMsg(error.message);
     } else {
+      // 2. Direct Sync to Google Sheets
+      if (GOOGLE_SHEETS_SCRIPT_URL && GOOGLE_SHEETS_SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+        try {
+          await fetch(GOOGLE_SHEETS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Avoids CORS errors on Google Apps Script
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              table: 'presences',
+              workshop_title: workshop?.title || '',
+              full_name: fullName.trim(),
+              email: email.trim(),
+              phone: phone.trim(),
+              status: status.trim(),
+              reason: reason.trim(),
+              created_at: new Date().toISOString(),
+            }),
+          });
+        } catch (err) {
+          console.error("Google Sheets Sync Error:", err);
+        }
+      }
+
       setSubmitted(true);
     }
 
