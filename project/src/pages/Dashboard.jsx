@@ -67,7 +67,6 @@ export default function Dashboard() {
       const { data, error } = await supabase
         .from('formations')
         .select('*, presences(id)')
-        .neq('is_active', false)
         .order('id', { ascending: false });
 
       if (error) {
@@ -148,9 +147,10 @@ export default function Dashboard() {
     setDeleteError('');
 
     try {
+      // PERMANENT HARD DELETE FROM SUPABASE
       const { error } = await supabase
         .from('formations')
-        .update({ is_active: false })
+        .delete()
         .eq('id', deleteTarget.id);
 
       if (error) {
@@ -200,7 +200,6 @@ export default function Dashboard() {
           location,
           description,
           trainer_id: user?.id || null,
-          is_active: true,
         },
       ]);
 

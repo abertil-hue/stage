@@ -209,9 +209,7 @@ export default function Attend() {
           <p className="text-xs text-slate-600 leading-relaxed">
             {t("Your registration for")} <strong className="text-slate-900">{workshop?.title || t('the workshop')}</strong> {t("has been submitted successfully.")}
           </p>
-          <div className="pt-4 border-t border-slate-100">
-            <p className="text-[11px] text-slate-400">{t("Algérie Télécom • Training Portal")}</p>
-          </div>
+    
         </div>
       </div>
     );

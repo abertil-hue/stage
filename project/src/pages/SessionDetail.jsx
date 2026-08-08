@@ -288,7 +288,6 @@ export default function SessionDetail() {
     doc.setFont('Helvetica', 'bold');
     doc.setFontSize(14);
     doc.setTextColor(0, 0, 0);
-    doc.text('ALGÉRIE TÉLÉCOM • PORTAIL DE FORMATION', 105, startY, { align: 'center' });
     
     startY += 7;
     doc.setFontSize(13);
